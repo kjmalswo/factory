@@ -61,16 +61,20 @@ function addStock(f, k, qty, totalCost) {
   f.basis[k] = (f.basis[k] * f.stock[k] + totalCost) / (f.stock[k] + qty);
   f.stock[k] += qty;
 }
+function companyEffect(f, key) {
+  return (f.completed||[]).reduce((total,id)=>{
+    const node=DB.development.nodes[id];
+    return total+(node && !node.tech ? node[key]||0 : 0);
+  },0);
+}
+const annualRate = f => DB.finance.annualInterest*(1-companyEffect(f,'interestDiscount'));
 function facility(s, f = s.player) {
   if (f.id !== 'player') return {work:f.capacity, dock:DB.ai.dock, storage:DB.ai.storage, daily:DB.ai.factoryDaily};
   const result = {work:f.lines * DB.operations.lineWork, dock:f.docks * DB.operations.dockGain, storage:0, daily:(f.lines + f.docks) * DB.operations.upgradeDaily};
   for (const asset of [...f.sites.map(site), ...(f.built ? [DB.build] : [])])
     for (const key of Object.keys(result)) result[key] += asset[key];
-  for (const id of f.completed||[]) {
-    const node=DB.development.nodes[id];
-    if(node.tech) continue;
-    for(const key of Object.keys(result)) result[key]+=node[key]||0;
-  }
+  for(const key of Object.keys(result)) result[key]+=companyEffect(f,key);
+  result.daily=Math.round(result.daily*(1-companyEffect(f,'overheadDiscount')));
   return result;
 }
 function company(id, money) {
@@ -136,11 +140,18 @@ function improve(s, kind) {
     afford(p,cost); cash(s,p,-cost,T.upgrade); p[kind]++;
   }
 }
-function bank(s, borrow) {
+function bank(s, borrow, amount) {
   requireOffice(s);
-  const p = s.player, b = DB.finance;
-  const n = borrow ? Math.min(b.loanUnit,b.creditLimit-p.debt) : Math.min(b.loanUnit,p.debt);
-  if (!n) fail(borrow ? 'limit' : 'noDebt');
-  if (!borrow) afford(p,n);
-  p.debt += borrow ? n : -n; cash(s,p,borrow ? n : -n,borrow ? T.borrow : T.repay);
+  if(s.over) fail('insolvent');
+  if(!Number.isSafeInteger(amount) || amount<1) fail('invalidLoanAmount');
+  const p=s.player;
+  if(borrow && amount>DB.finance.creditLimit-p.debt) fail('limitExceeded');
+  if(!borrow){
+    if(!p.debt) fail('noDebt');
+    if(amount>p.debt) fail('principalExceeded');
+    afford(p,amount);
+  }
+  const change=borrow?amount:-amount;
+  p.debt+=change;
+  cash(s,p,change,borrow?T.borrow:T.repay);
 }

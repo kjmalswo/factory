@@ -20,10 +20,12 @@ function designNumbers(d) {
 }
 function designView() {
   const d=U.design??=defaultDesign(), r=DB.development;
-  const techs=entries(r.nodes).filter(([,n])=>n.tech).map(([id,n])=>{
-    const unlocked=S.player.completed?.includes(id);
-    return '<label class="tech-choice"><input type="checkbox" data-tech="'+id+'" '+(unlocked?'':'disabled')+' '+(d.techs.includes(id)?'checked':'')+'>'+nodeName(n)+'</label>';
+  const techs=entries(r.nodes).filter(([id,n])=>n.tech && S.player.completed?.includes(id)).map(([id,n])=>{
+    const selected=d.techs.includes(id), full=d.techs.length>=r.techSlots;
+    return '<label class="tech-choice" title="'+n.desc+'"><input type="checkbox" data-tech="'+id+'" '+
+      (selected?'checked':full?'disabled':'')+'>'+nodeName(n)+'</label>';
   }).join('');
+  const techLimit=T.techLimit.replace('{count}',r.techSlots);
   const pricing=U.priceBasis==='costRatio'?'costRatio':'targetMargin';
   const min=pricing==='costRatio'?r.percent-r.marginMax:r.marginMin, max=pricing==='costRatio'?r.percent-r.marginMin:r.marginMax;
   const number=Number.isFinite(d.margin)?(pricing==='costRatio'?r.percent-d.margin:d.margin):'';
@@ -31,7 +33,7 @@ function designView() {
     select('family',T.family,options(DB.products,d.family,k=>DB.goods[k].name))+select('subtype',T.subtype,options(variants(d.family).map((_,i)=>i),d.subtype,i=>variants(d.family)[i]))+
     select('tier',T.tier,options(Object.keys(r.tiers),d.tier,k=>r.tiers[k].name))+select('finish',T.finish,options(Object.keys(r.finishes),d.finish,k=>r.finishes[k].name))+
     select('priceBasis',T.pricingBasis,options(['targetMargin','costRatio'],pricing,k=>T[k]))+'<label class="field">'+T.pricingValue+'<input type="number" required name="designRatio" min="'+min+'" max="'+max+'" value="'+number+'"></label>'+
-    '<fieldset class="tech-set"><legend>'+T.appliedTech+'</legend>'+tag(techNames()[0],'green')+techs+'</fieldset><p>'+T.techHint+'</p><button class="wide primary" type="submit">'+T.newDesign+icon('arrow',16)+'</button></form>';
+    '<fieldset class="tech-set"><legend>'+T.appliedTech+'</legend>'+tag(techNames()[0],'green')+(techs||'<p>'+T.noUnlockedTech+'</p>')+'</fieldset><p>'+techLimit+' '+T.techHint+'</p><button class="wide primary" type="submit">'+T.newDesign+icon('arrow',16)+'</button></form>';
   const list=entries(S.designs||{}).map(([id,d])=>btn('designedSku',itemLogo(id)+'<span>'+esc(d.name)+'</span>'+tag(variants(d.family)[d.subtype]),'good','data-id="'+id+'"')).join('');
   return '<div class="two-col">'+panel(T.design,'<p>'+T.designHelp+'</p>'+fields)+panel(T.designPrice,'<div id="design-numbers">'+designNumbers(d)+'</div>')+'</div>'+panel(T.designReady,list?'<div class="goods-list">'+list+'</div>':empty(T.emptyDesign));
 }
@@ -40,7 +42,7 @@ function treeStatus(id,node,p) {
   if(p.project?.id===id) return ['active',T.underway];
   return node.needs.every(k=>p.completed?.includes(k)) ? ['ready',T.treeReady] : ['locked',T.treeLocked];
 }
-function technologyTree(title,ids,p) {
+function technologyTree(branch,title,ids,p,selected) {
   const nodes=DB.development.nodes, positions=new Map();
   const depth=id=>Math.max(0,...nodes[id].needs.map(parent=>1+depth(parent)));
   const columns=Math.max(...ids.map(depth))+1;
@@ -58,10 +60,14 @@ function technologyTree(title,ids,p) {
   const controls=ids.map(id=>{
     const node=nodes[id], [state,label]=treeStatus(id,node,p), {x,y}=positions.get(id);
     const tip='<span class="node-tip" id="tip-'+id+'" role="tooltip"><strong>'+nodeName(node)+'</strong><span>'+node.desc+'</span><em>'+label+'</em></span>';
-    return '<div class="tree-point" style="--x:'+x+'%;--y:'+y+'%">'+btn('treeNode',icon(node.icon,26),'tree-icon '+state,'data-id="'+id+'" aria-label="'+nodeName(node)+'" aria-describedby="tip-'+id+'" aria-pressed="'+(U.node===id)+'"')+
+    const edge=depth(id)===0?' first-column':depth(id)===columns-1?' last-column':'';
+    return '<div class="tree-point'+edge+'" style="--x:'+x+'%;--y:'+y+'%">'+btn('treeNode',icon(node.icon,26),'tree-icon '+state,'data-id="'+id+'" aria-label="'+nodeName(node)+'" aria-describedby="tip-'+id+'" aria-pressed="'+(selected===id)+'"')+
       '<span class="node-label">'+nodeName(node)+'</span>'+tip+'</div>';
   }).join('');
-  return '<section class="tree-branch"><h3>'+title+'</h3><div class="tree-scroll"><div class="tree-grid" style="--cols:'+columns+';--rows:'+rows+'"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+edges+'</svg>'+controls+'</div></div></section>';
+  const completed=ids.filter(id=>p.completed?.includes(id)).length;
+  return '<section class="tree-branch"><h3>'+title+' <span aria-label="'+T.researchCount+'">'+completed+' / '+ids.length+'</span></h3>'+
+    '<div class="tree-scroll" data-tree="'+branch+'" tabindex="0" aria-label="'+title+'"><div class="tree-grid" style="--cols:'+columns+';--rows:'+rows+'">'+
+    '<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+edges+'</svg>'+controls+'</div></div></section>';
 }
 function projectView() {
   const p=S.player,nodes=DB.development.nodes,ids=Object.keys(nodes);
@@ -73,5 +79,5 @@ function projectView() {
     '<div class="tree-cost">'+row(T.prerequisites,node.needs.length?node.needs.map(k=>nodeName(nodes[k])).join(' + '):T.noRequirements)+
     row(T.projectPrice,won(developmentCost(node.cost)))+row(state==='active'?T.daysLeft:T.daysRequired,(state==='active'?p.project.due-S.day:node.days)+' '+T.dayUnit)+
     (launch?btn('project',T.startProject,'primary','data-id="'+id+'"'):'')+'</div></div>';
-  return technologyTree(T.researchTree,researchIds,p)+technologyTree(T.companyTree,companyIds,p)+detail;
+  return detail+technologyTree('research',T.researchTree,researchIds,p,id)+technologyTree('company',T.companyTree,companyIds,p,id);
 }

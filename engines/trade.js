@@ -9,8 +9,10 @@ function quote(s, k, route, qty, buyer='player') {
   const facilitySite = buyer === 'player' ? site('office') : DB.sites.find(a=>a.firm === buyer);
   const sourceSite = DB.sites.find(a=>a.firm === seller.id);
   const distance = Math.abs(sourceSite.x-facilitySite.x)+Math.abs(sourceSite.y-facilitySite.y);
-  const freight = Math.round(r.freight*(foreign ? 1 : 1 + distance / DB.map.width));
-  const days = r.days + (!foreign && distance > DB.map.width/DB.trade.crossDock ? 1 : 0);
+  const freightFactor=1-companyEffect(s.firms[buyer]||s.player,'freightDiscount');
+  const freight = Math.round(r.freight*(foreign ? 1 : 1 + distance / DB.map.width)*freightFactor);
+  const routeDays=r.days+(!foreign && distance>DB.map.width/DB.trade.crossDock?1:0);
+  const days=Math.max(1,routeDays-companyEffect(s.firms[buyer]||s.player,'transitDays'));
   return {qty, k, route, seller:foreign ? 'foreign' : seller.id, stock:foreign ? s.foreign[k] : seller.stock[k], unit, tariff, freight, landed:unit+tariff+freight, total:qty*(unit+tariff+freight), days};
 }
 function purchase(s,f,k,route,qty) {

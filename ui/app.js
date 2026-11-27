@@ -30,6 +30,10 @@ function runClock(){
   requireOffice(S);if(S.over)fail('insolvent');
   timer=setInterval(tick,DB.calendar.speeds[U.speed]);
 }
+function toggleClock() {
+  if(timer) stopClock();
+  else runClock();
+}
 function nav(id) {
   if(id==='design') stopClock();
   U.focusWindow=U.page!==id;
@@ -37,6 +41,8 @@ function nav(id) {
 }
 function render() {
   const focus=document.activeElement, prior=root.contains(focus)?focus.dataset:{};
+  const inputName=focus instanceof HTMLInputElement ? focus.name : null;
+  const selection=inputName?[focus.selectionStart,focus.selectionEnd]:null;
   if(founding) {
     root.innerHTML=foundingScreen(draft,!!S);
     Harbor.mount(document.getElementById('found-canvas'),()=>({s:{player:{sites:[]}},id:'office'}),()=>{});
@@ -47,10 +53,15 @@ function render() {
   if(opening) return;
   const field=prior.field?'[data-field="'+prior.field+'"]':prior.tech?'[data-tech="'+prior.tech+'"]':null;
   const action=prior.act?'[data-act="'+prior.act+'"]'+(prior.id?'[data-id="'+prior.id+'"]':''):null;
-  const selector=field||action;
-  if(selector) root.querySelector(selector)?.focus({preventScroll:true});
+  const selector=field||action||(inputName?'input[name="'+inputName+'"]':null);
+  const replacement=selector && root.querySelector(selector);
+  if(replacement){
+    replacement.focus({preventScroll:true});
+    if(selection?.[0]!=null) replacement.setSelectionRange(...selection);
+  }
 }
 function closeWindow() {
+  windowDrag=null;
   const previous=U.page;
   U.page=null;render();
   const opener=root.querySelector('.world-dock [data-id="'+previous+'"]');
@@ -95,7 +106,31 @@ async function downloadGame(){
     a.href=url;a.download=T.downloadName;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   }catch{notice(T.downloadFail);}
 }
+function formatLoanAmount(input) {
+  const digits=value=>value.replace(/[^0-9]/g,'');
+  if(/[^0-9,\s]/.test(input.value)){
+    input.value=U.loanAmount||'';
+    return;
+  }
+  const raw=digits(input.value), canonical=raw.replace(/^0+(?=[0-9])/,'');
+  const ahead=Math.max(0,digits(input.value.slice(0,input.selectionStart)).length-(raw.length-canonical.length));
+  const formatted=canonical.replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  let caret=0, seen=0;
+  while(caret<formatted.length && seen<ahead) {
+    if(formatted[caret++]!==',') seen++;
+  }
+  U.loanAmount=formatted;
+  if(input.value!==formatted){input.value=formatted;input.setSelectionRange(caret,caret);}
+}
+root.addEventListener('beforeinput',e=>{
+  const input=e.target;
+  if(input.name!=='loanAmount' || input.selectionStart!==input.selectionEnd) return;
+  const caret=input.selectionStart;
+  if(e.inputType==='deleteContentBackward' && input.value[caret-1]===',') input.setSelectionRange(caret-2,caret);
+  else if(e.inputType==='deleteContentForward' && input.value[caret]===',') input.setSelectionRange(caret,caret+2);
+});
 root.addEventListener('input',e=>{
+  if(e.target.name==='loanAmount'){formatLoanAmount(e.target);return;}
   if(e.target.name==='designName')U.design.name=e.target.value;
   if(e.target.name==='designRatio'){
     const r=DB.development;
@@ -105,6 +140,16 @@ root.addEventListener('input',e=>{
   if(e.target.name==='companyName'){draft.name=e.target.value;e.target.setCustomValidity('');}
 });
 root.addEventListener('submit',e=>{
+  if(e.target.id==='loan-form'){
+    e.preventDefault();
+    const borrow=e.submitter?.value!=='repay';
+    const amount=Number(e.target.elements.loanAmount.value.replaceAll(',',''));
+    try{
+      bank(S,borrow,amount);
+      U.loanAmount='';save();render();notice(borrow?T.borrow:T.repay);
+    }catch(err){notice(err.message);}
+    return;
+  }
   if(e.target.id==='design-form'){
     e.preventDefault();
     try{
@@ -121,7 +166,7 @@ root.addEventListener('submit',e=>{
   if(S && !confirm(T.resetConfirm))return;
   const settings={...draft,name};
   S=newGame(Date.now()>>>0,settings);founding=false;stopClock();
-  Object.assign(U,{design:null,priceBasis:'targetMargin',node:null,batch:DB.operations.batch[0],exportQty:DB.trade.lots[0],qty:DB.trade.lots[0],resaleQty:DB.trade.lots[0],contractQty:DB.operations.batch[0],route:'road',raw:DB.raw[0],product:null,sku:null,material:DB.raw[0],site:'office',tab:'raw',speed:0});
+  Object.assign(U,{design:null,priceBasis:'targetMargin',node:null,loanAmount:'',windowPositions:{},batch:DB.operations.batch[0],exportQty:DB.trade.lots[0],qty:DB.trade.lots[0],resaleQty:DB.trade.lots[0],contractQty:DB.operations.batch[0],route:'road',raw:DB.raw[0],product:null,sku:null,material:DB.raw[0],site:'office',tab:'raw',speed:0});
   Harbor.focus('office');nav(null);save();render();
 });
 root.addEventListener('change',e=>{
@@ -178,11 +223,11 @@ root.addEventListener('click',e=>{
     const commands={
       project:()=>startProject(S,id),acquire:()=>acquire(S,id),build:()=>improve(S,'build'),lines:()=>improve(S,'lines'),docks:()=>improve(S,'docks'),
       contract:()=>contract(S,U.product,U.buyer,U.contractQty),resell:()=>resell(S,U.raw,U.resaleQty),order:()=>purchase(S,p,U.raw,U.route,U.qty),make:()=>enqueue(S,p,U.sku,U.batch),
-      export:()=>shipExport(S,p,U.product,U.exportQty),borrow:()=>bank(S,true),repay:()=>bank(S,false)
+      export:()=>shipExport(S,p,U.product,U.exportQty)
     };
     if(commands[action]){
       if(S.over)fail('insolvent');commands[action]();save();
-      const msg={project:'researchStarted',contract:'contractBtn',resell:'buyback',order:'purchased',make:'queue',export:'exportBtn',borrow:'borrow',repay:'repay',acquire:id==='office'?'leased':'acquired',build:'builtNews',lines:'upgrade',docks:'upgrade'};
+      const msg={project:'researchStarted',contract:'contractBtn',resell:'buyback',order:'purchased',make:'queue',export:'exportBtn',acquire:id==='office'?'leased':'acquired',build:'builtNews',lines:'upgrade',docks:'upgrade'};
       notice(T[msg[action]]);
     } else switch(action){
       case 'nav':if(U.page===id){closeWindow();return;}nav(id);break;
@@ -195,7 +240,7 @@ root.addEventListener('click',e=>{
       case 'guideOpen':openGuideTarget();break;
       case 'fullscreen':void toggleFullscreen();return;
       case 'siteList':nav('site');break;
-      case 'clock':if(timer)stopClock();else runClock();break;
+      case 'clock':toggleClock();break;
       case 'speed':U.speed=(U.speed+1)%DB.calendar.speeds.length;if(timer){stopClock();runClock();}break;
       case 'next':tick();return;
       case 'save':save(true);return;
@@ -217,8 +262,19 @@ root.addEventListener('click',e=>{
   }catch(err){notice(err.message);}
 });
 document.addEventListener('keydown',e=>{
+  if(!founding && !e.defaultPrevented && !e.isComposing && !e.ctrlKey && !e.altKey && !e.metaKey &&
+    (e.code==='Space' || e.key===' ') &&
+    !e.target.closest?.('input,textarea,select,[contenteditable]:not([contenteditable="false"]),button:focus-visible')){
+    e.preventDefault();
+    if(!e.repeat){
+      try{toggleClock();render();}
+      catch(err){notice(err.message);}
+    }
+    return;
+  }
   if(e.key==='Escape' && !founding && U.page){e.preventDefault();closeWindow();}
 });
+window.addEventListener('resize',()=>{if(!founding && U.page && U.windowPositions?.[U.page] && !windowDrag) render();});
 document.addEventListener('fullscreenchange',()=>{if(!founding) render();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden && timer){stopClock();save();render();}});
 render();

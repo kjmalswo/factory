@@ -38,7 +38,7 @@ const head=(name,en,action='')=>'<div class="panel-head"><div><div class="eyebro
 const panel=(name,body)=>'<section class="panel section"><h2>'+name+'</h2>'+body+'</section>';
 const empty=msg=>'<p class="empty">'+msg+'</p>';
 const options=(arr,val,label=x=>x)=>arr.map(x=>'<option value="'+x+'" '+(String(val)===String(x)?'selected':'')+'>'+label(x)+'</option>').join('');
-const select=(id,title,opts)=>'<label class="field">'+title+'<select data-field="'+id+'">'+opts+'</select></label>';
+const select=(id,title,opts)=>'<div class="field"><span id="field-'+id+'">'+title+'</span><select aria-labelledby="field-'+id+'" data-field="'+id+'">'+opts+'</select></div>';
 const qtyOptions=(arr,val)=>options(arr,val,pcs);
 const tickerChange=k=>{
   const hist=S.market[familyOf(k)].history,prev=hist.at(-2)??hist[0];return (hist.at(-1)/prev-1)*100;
@@ -142,7 +142,14 @@ function logisticsView() {
 }
 function financeView() {
   const p=S.player,b=DB.finance;
-  return '<div class="two-col">'+panel(T.cashflow,row(T.balance,won(p.cash))+row(T.income,won(p.profit))+row(T.daily,won(facility(S).daily))+row(T.target,won(b.goalProfit))+'<p>'+T.profitHelp+'</p>')+panel(T.debt,row(T.debt,won(p.debt))+row(T.limit,won(b.creditLimit))+row(T.interest,(b.annualInterest*100).toFixed(1)+'%')+'<p>'+T.creditHelp+'</p><div class="actions">'+btn('borrow',T.borrow,'subtle')+btn('repay',T.repay,'subtle')+'</div>')+'</div>'+panel(T.ledger,S.ledger.length?'<div class="table-wrap"><table><thead><tr>'+[T.date,T.description,T.amountMoney,T.balance].map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+S.ledger.map(l=>'<tr><td>'+T.dayPrefix+l.day+'</td><td>'+esc(l.label)+'</td><td class="'+(l.amount>=0?'up':'')+'">'+won(l.amount)+'</td><td>'+won(l.balance)+'</td></tr>').join('')+'</tbody></table></div>':empty(T.noHistory));
+  const balances=row(T.balance,won(p.cash))+row(T.income,won(p.profit))+row(T.daily,won(facility(S).daily))+row(T.target,won(b.goalProfit))+'<p>'+T.profitHelp+'</p>';
+  const lending=row(T.debt,won(p.debt))+row(T.limit,won(b.creditLimit))+row(T.creditAvailable,won(b.creditLimit-p.debt))+
+    row(T.repaymentAvailable,won(Math.max(0,Math.min(p.cash,p.debt))))+row(T.interest,(annualRate(p)*DB.development.percent).toFixed(2)+'%');
+  const form='<form id="loan-form"><label class="field" for="loan-amount">'+T.loanAmount+
+    '<input id="loan-amount" name="loanAmount" type="text" inputmode="numeric" autocomplete="off" value="'+esc(U.loanAmount||'')+'" required></label>'+
+    '<p>'+T.loanAmountHint+'</p><div class="actions"><button type="submit" name="bankAction" value="borrow" class="primary">'+T.borrow+'</button>'+
+    '<button type="submit" name="bankAction" value="repay" class="subtle">'+T.repay+'</button></div></form>';
+  return '<div class="two-col">'+panel(T.cashflow,balances)+panel(T.debt,lending+form+'<p>'+T.creditHelp+'</p>')+'</div>' +panel(T.ledger,S.ledger.length?'<div class="table-wrap"><table><thead><tr>'+[T.date,T.description,T.amountMoney,T.balance].map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+S.ledger.map(l=>'<tr><td>'+T.dayPrefix+l.day+'</td><td>'+esc(l.label)+'</td><td class="'+(l.amount>=0?'up':'')+'">'+won(l.amount)+'</td><td>'+won(l.balance)+'</td></tr>').join('')+'</tbody></table></div>':empty(T.noHistory));
 }
 function firmsView() {
   const d=profile(U.firm),f=S.firms[d.id];

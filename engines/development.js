@@ -1,10 +1,14 @@
 'use strict';
 const developmentCost = amount => Math.round(amount*(DB.sector.capitalScale??1));
 const techNames = () => DB.sector.technologies||DB.development.techNames;
-const nodeName = node => node.tech ? techNames()[node.tech] : node.name;
+const nodeName = node => typeof node.tech==='number' ? techNames()[node.tech] : node.name;
 const variants = family => DB.sector.categories?.[family] || DB.development.legacySubtype;
-const channelFor = f => DB.channels[f.channel??0];
-const channelCapacity = f => channelFor(f).capacity+(f.completed||[]).reduce((v,id)=>v+(DB.development.nodes[id].capacity||0),0);
+function channelFor(f) {
+  const channel=DB.channels[f.channel??0];
+  return {...channel,fee:Math.max(0,channel.fee-companyEffect(f,'feeDiscount')),
+    reach:channel.reach+companyEffect(f,'reach')};
+}
+const channelCapacity = f => DB.channels[f.channel??0].capacity+companyEffect(f,'capacity');
 function startProject(s,id) {
   requireOffice(s);
   const p=s.player,node=DB.development.nodes[id];
@@ -34,6 +38,12 @@ function blueprint(d) {
   const multiplier=key=>factors.reduce((v,node)=>v*(node[key]??1),1);
   const bom={...base.bom};
   if(tier.extraMaterial) bom[DB.raw[0]]=(bom[DB.raw[0]]||0)+tier.extraMaterial;
+  const materialSavings=sum(factors.map(node=>node.materialSaving||0));
+  for(let i=0;i<materialSavings;i++){
+    const [material, units]=entries(bom).reduce((largest,item)=>item[1]>largest[1]?item:largest);
+    if(units<=1) break;
+    bom[material]--;
+  }
   const work=Math.max(1,Math.round(base.work*tier.work*finish.work*sub.work*multiplier('work')*rules.roundWork))/rules.roundWork;
   const conversion=Math.round(base.conversion*tier.cost*finish.cost*sub.cost*multiplier('costFactor'));
   return {...base,name:d.name,short:d.name,family:d.family,bom,work,conversion,quality:tier.quality*finish.quality*sub.quality*multiplier('quality'),margin:d.margin};
@@ -50,6 +60,7 @@ function registerDesign(s,draft) {
   if(!d.name||d.name.length>rules.nameLimit) fail('invalidName');
   if(values(DB.goods).some(g=>g.name===d.name)) fail('sameName');
   if(!Number.isFinite(d.margin)||d.margin<rules.marginMin||d.margin>rules.marginMax) fail('badMargin');
+  if(d.techs.length>rules.techSlots) throw new Error(T.techLimit.replace('{count}',rules.techSlots));
   if(d.techs.some(id=>!p.completed?.includes(id))) fail('noTech');
   const g=blueprint(d), fee=developmentCost(rules.designFee), id=T.skuPrefix+(Object.keys(s.designs||{}).length+1);
   afford(p,fee);

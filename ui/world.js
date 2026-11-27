@@ -38,9 +38,10 @@ function worldHud() {
     '<div>'+icon('bars',18)+'<div><span>'+T.income+'</span><strong class="'+(S.player.profit<0?'down':'up')+'">'+won(S.player.profit)+'</strong></div></div>'+
     '<div>'+icon('production',18)+'<div><span>'+T.status+'</span><strong>'+T[S.over?'insolvent':bottleneck(S)]+'</strong></div></div></div>'+
     '<div class="world-controls"><div class="world-clock '+(guide==='clock'?'guide-target':'')+'"><div class="world-date"><strong>'+T.dayTag+' '+String(S.day).padStart(3,'0')+'</strong><span>'+date+'</span></div>'+
-    ib('clock',timer?'pause':'play',timer?T.pause:T.play)+btn('speed',DB.calendar.speedLabels[U.speed],'speed','title="'+T.speed+'" aria-label="'+T.speed+'"')+ib('next','forward',T.next)+'</div>'+
+    ib('clock',timer?'pause':'play',(timer?T.pause:T.play)+' · '+T.spaceHint,'aria-keyshortcuts="Space"')+btn('speed',DB.calendar.speedLabels[U.speed],'speed','title="'+T.speed+'" aria-label="'+T.speed+'"')+ib('next','forward',T.next)+'</div>'+
     '<div class="world-tools">'+ib('guideStart','help',T.tutorial)+ib('fullscreen','screen',document.fullscreenElement?T.exitFullscreen:T.fullscreen)+
     btn('nav',icon('settings',16),'icon-btn '+(guide==='system'?'guide-target':''),'data-id="system" aria-label="'+T.gameSettings+'" title="'+T.gameSettings+'"')+'</div></div></header>'+
+    (!timer?'<div class="world-paused">'+icon('pause',14)+T.paused+'</div>':'')+
     (S.over?'<div class="failure world-failure">'+T.failedHelp+' '+btn('reset',T.reset,'subtle')+'</div>':'');
 }
 function guideCard() {
@@ -77,6 +78,41 @@ function showSiteTooltip(id,point) {
   tip.style.left=clamp(point.x+12,8,Math.max(8,innerWidth-tip.offsetWidth-8))+'px';
   tip.style.top=clamp(point.y-tip.offsetHeight-12,8,Math.max(8,innerHeight-tip.offsetHeight-8))+'px';
 }
+let windowDrag=null;
+function placeWindow(dialog,position) {
+  const world=dialog.closest('.world'), margin=8;
+  const width=world.clientWidth,height=world.clientHeight;
+  const left=clamp(position.x,margin,Math.max(margin,width-dialog.offsetWidth-margin));
+  const top=clamp(position.y,margin,Math.max(margin,height-dialog.offsetHeight-margin));
+  Object.assign(dialog.style,{left:left+'px',top:top+'px',right:'auto',bottom:'auto',height:dialog.offsetHeight+'px'});
+  return {x:left,y:top};
+}
+function bindWindowDrag(dialog) {
+  const title=dialog.querySelector('.window-title');
+  const positions=U.windowPositions??={};
+  const page=dialog.dataset.page;
+  if(positions[page]) placeWindow(dialog,positions[page]);
+  title.addEventListener('pointerdown',event=>{
+    if(!event.isPrimary || event.button!==0 || event.target.closest('button')) return;
+    const rect=dialog.getBoundingClientRect();
+    windowDrag={id:event.pointerId,dx:event.clientX-rect.left,dy:event.clientY-rect.top};
+    title.setPointerCapture(event.pointerId);
+    title.classList.add('is-dragging');
+    event.preventDefault();
+  });
+  title.addEventListener('pointermove',event=>{
+    if(windowDrag?.id!==event.pointerId) return;
+    const position={x:event.clientX-windowDrag.dx,y:event.clientY-windowDrag.dy};
+    positions[page]=placeWindow(dialog,position);
+  });
+  function finishDrag(event) {
+    if(windowDrag?.id!==event.pointerId) return;
+    windowDrag=null;
+    title.classList.remove('is-dragging');
+    render();
+  }
+  for(const type of ['pointerup','pointercancel','lostpointercapture']) title.addEventListener(type,finishDrag);
+}
 function renderWorld() {
   let map=document.getElementById('map-canvas');
   if(!map) {
@@ -97,13 +133,21 @@ function renderWorld() {
   document.getElementById('guide-slot').innerHTML=guideCard();
   const world=root.querySelector('.world'),guide=root.querySelector('.guide-box');
   world.classList.toggle('with-guide',!!guide);
+  world.classList.toggle('is-paused',!timer);
   if(guide) world.style.setProperty('--guide-height',guide.offsetHeight+'px');
+  if(windowDrag) return;
   const slot=document.getElementById('window-slot'), prior=slot.querySelector('.world-window');
-  const scroll=prior?.dataset.page===U.page?prior.querySelector('.window-body').scrollTop:0;
+  const sameWindow=prior?.dataset.page===U.page;
+  const scroll=sameWindow?prior.querySelector('.window-body').scrollTop:0;
+  const treeScroll=new Map(sameWindow?[...prior.querySelectorAll('[data-tree]')].map(tree=>[tree.dataset.tree,tree.scrollLeft]):[]);
   const renderView=windowViews[U.page];
-  slot.innerHTML=renderView?'<section role="dialog" aria-labelledby="window-title" tabindex="-1" data-page="'+U.page+'" class="world-window world-window--'+U.page+'"><header class="window-title"><div>'+icon(U.page==='site'?'office':U.page==='system'?'settings':U.page,19)+'<h2 id="window-title">'+menuTitle(U.page)+'</h2></div>'+ib('closeWindow','close',T.close)+'</header><div class="window-body">'+renderView()+'</div></section>':'';
-  const windowBody=slot.querySelector('.window-body');
-  if(windowBody) windowBody.scrollTop=scroll;
+  slot.innerHTML=renderView?'<section role="dialog" aria-labelledby="window-title" tabindex="-1" data-page="'+U.page+'" class="world-window world-window--'+U.page+'"><header class="window-title" title="'+T.dragWindow+'"><div>'+icon(U.page==='site'?'office':U.page==='system'?'settings':U.page,19)+'<h2 id="window-title">'+menuTitle(U.page)+'</h2></div>'+ib('closeWindow','close',T.close)+'</header><div class="window-body">'+renderView()+'</div></section>':'';
+  const dialog=slot.querySelector('.world-window');
+  if(dialog){
+    bindWindowDrag(dialog);
+    dialog.querySelector('.window-body').scrollTop=scroll;
+    for(const tree of dialog.querySelectorAll('[data-tree]')) tree.scrollLeft=treeScroll.get(tree.dataset.tree)||0;
+  }
   const preview=document.getElementById('preview');
   if(preview) {
     const a=site(U.site);

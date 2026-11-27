@@ -18,7 +18,7 @@ function day(s) {
   marketDay(s);
   for(const f of companies) {
     if(f.retired) continue;
-    const fixed=facility(s,f).daily, interest=Math.ceil(f.debt*DB.finance.annualInterest/DB.finance.year);
+    const fixed=facility(s,f).daily, interest=Math.ceil(f.debt*annualRate(f)/DB.finance.year);
     if(f.id==='player' && f.cash<fixed+interest) {
       const credit=Math.min(DB.finance.creditLimit-f.debt, Math.ceil((fixed+interest-f.cash)/DB.finance.loanUnit)*DB.finance.loanUnit);
       if(credit) {cash(s,f,credit,T.autoLoan);f.debt+=credit;}
