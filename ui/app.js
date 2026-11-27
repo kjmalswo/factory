@@ -4,13 +4,13 @@ function restore(){
   try {
     const s=JSON.parse(localStorage.getItem(saveKey));
     if(s?.version===DB.version && s.player?.milestones && s.market && s.firms && Array.isArray(s.cargos)) {
-      s.setup??=foundingDefaults();configureCompany(s.setup);return s;
+      s.setup??={...foundingDefaults(),sector:Catalog.startup.legacySector};restoreIndustry(s);return s;
     }
   } catch {}
   return null;
 }
 let S=restore(), timer=null, toastTimer=null, founding=!S, draft=foundingDefaults();
-const U={page:'overview',site:'office',material:DB.raw[0],buyer:DB.ai.firms.find(d=>!d.raw).id,contractQty:DB.operations.batch[0],resaleQty:DB.trade.lots[0],raw:DB.raw[0],product:DB.products[0],sku:DB.products[0],tab:'raw',route:'road',qty:DB.trade.lots[0],batch:DB.operations.batch[0],exportQty:DB.operations.batch[0],firm:DB.ai.firms[0].id,speed:0,menu:false};
+const U={page:'overview',site:'office',material:DB.raw[0],buyer:DB.ai.firms.find(d=>!d.raw).id,contractQty:DB.operations.batch[0],resaleQty:DB.trade.lots[0],raw:DB.raw[0],product:DB.products[0],sku:DB.products[0],tab:'raw',route:'road',qty:DB.trade.lots[0],batch:DB.operations.batch[0],exportQty:DB.trade.lots[0],firm:DB.ai.firms[0].id,speed:0,menu:false};
 const root=document.getElementById('app');
 document.title=T.title;
 function notice(msg) {
@@ -30,7 +30,7 @@ function runClock(){
   requireOffice(S);if(S.over)fail('insolvent');
   timer=setInterval(tick,DB.calendar.speeds[U.speed]);
 }
-const nav=(id)=>{U.page=id;U.menu=false;window.scrollTo(0,0);};
+const nav=(id)=>{if(id==='design')stopClock();U.page=id;U.menu=false;window.scrollTo(0,0);};
 function sidebar() {
   const logo=brandIcon;
   return '<aside class="sidebar '+(U.menu?'opened':'')+'"><div class="brand">'+logo+'<div><strong>'+DB.brand+'</strong><small>'+T.kicker+'</small></div></div><nav aria-label="'+T.navigation+'">'+T.navGroups.map((group,i)=>'<div class="nav-group"><div class="nav-label">'+T.groupNames[i]+'</div>'+group.map(id=>navbtn(id,icon(id)+'<span>'+T[id]+'</span>'+(id===U.page?'<i></i>':''),id===U.page?'nav-item active':'nav-item')).join('')+'</div>').join('')+'</nav><div class="side-bottom">'+btn('save',icon('save',16)+T.save,'utility')+btn('download',icon('down',16)+T.download,'utility')+btn('reset',icon('reset',16)+T.reset,'utility')+'<div class="connection"><i></i>'+T.systemOnline+'</div></div></aside>'+(U.menu?btn('menu','','scrim','aria-label="'+T.close+'"'):'');
@@ -40,7 +40,8 @@ function header() {
   return '<header class="topbar"><div class="top-place">'+ib('menu','menu',T.mobileMenu)+'<span class="port-icon">'+icon('anchor',18)+'</span><strong>'+DB.region+'</strong><span class="slash">/</span><span class="company-name" title="'+esc(S.setup.name)+'">'+esc(S.setup.name)+'</span></div><div class="time-controls"><span class="date">'+icon('calendar',15)+date+'</span><span class="day">'+T.dayTag+' '+String(S.day).padStart(3,'0')+'</span><div class="transport">'+ib('clock',timer?'pause':'play',timer?T.pause:T.play)+btn('speed',DB.calendar.speedLabels[U.speed],'speed','title="'+T.speed+'" aria-label="'+T.speed+'"')+ib('next','forward',T.next)+'</div></div></header>';
 }
 function stats() {
-  const idx=100*sum(Object.keys(DB.goods).map(k=>marketPrice(S,k)/DB.goods[k].base))/Object.keys(DB.goods).length;
+  const benchmark=[...DB.raw,...DB.products];
+  const idx=DB.development.percent*sum(benchmark.map(k=>marketPrice(S,k)/DB.goods[k].base))/benchmark.length;
   const tiles=[['cash',T.cashShort,won(S.player.cash),'gold'],['finance',T.income,won(S.player.profit),'mint'],['market',T.marketSummary,idx.toFixed(1),'blue'],['production',T.status,T[S.over?'insolvent':bottleneck(S)],'lavender']];
   return '<div class="stats">'+tiles.map(([ic,name,val,col])=>'<div class="stat"><div class="stat-top"><span class="stat-icon '+col+'">'+icon(ic,16)+'</span><span>'+name+'</span></div><strong>'+val+'</strong></div>').join('')+'</div>';
 }
@@ -55,7 +56,7 @@ function render() {
     Harbor.mount(document.getElementById('found-canvas'),()=>({s:{player:{sites:[]}},id:'office'}),()=>{});
     return;
   }
-  const pages={overview,map:()=>'<div class="dashboard map-view"><div class="main-col">'+mapPanel()+'</div><aside class="right-col">'+inspector()+'</aside></div>',market:marketView,production:productionView,logistics:logisticsView,finance:financeView,firms:firmsView,news:newsView};
+  const pages={overview,design:designView,development:projectView,map:()=>'<div class="dashboard map-view"><div class="main-col">'+mapPanel()+'</div><aside class="right-col">'+inspector()+'</aside></div>',market:marketView,production:productionView,logistics:logisticsView,finance:financeView,firms:firmsView,news:newsView};
   root.innerHTML=sidebar()+'<div class="workarea">'+header()+'<main><div class="page-title"><div><div class="eyebrow title-eyebrow"><i></i>'+(U.page==='overview'?T.overviewEn:T.navEnglish[U.page])+'</div><h1>'+T[U.page]+'</h1></div><span class="phase"><i class="'+(timer?'running':'')+'"></i>'+(S.over?T.bankruptMsg:timer?T.live:T.pauseLabel)+'</span></div>'+(S.over?'<div class="failure">'+T.failedHelp+' '+btn('reset',T.reset,'subtle')+'</div>':'')+(U.page==='overview'?stats():'')+pages[U.page]()+'</main></div>';
   if(prior?.field) root.querySelector('[data-field="'+prior.field+'"]')?.focus({preventScroll:true});
   else if(prior?.act) root.querySelector('[data-act="'+prior.act+'"]'+(prior.id?'[data-id="'+prior.id+'"]':''))?.focus({preventScroll:true});
@@ -91,9 +92,24 @@ async function downloadGame(){
   }catch{notice(T.downloadFail);}
 }
 root.addEventListener('input',e=>{
+  if(e.target.name==='designName')U.design.name=e.target.value;
+  if(e.target.name==='designRatio'){
+    const r=DB.development;
+    U.design.margin=e.target.value===''?NaN:U.priceBasis==='costRatio'?r.percent-e.target.valueAsNumber:e.target.valueAsNumber;
+    document.getElementById('design-numbers').innerHTML=designNumbers(U.design);
+  }
   if(e.target.name==='companyName'){draft.name=e.target.value;e.target.setCustomValidity('');}
 });
 root.addEventListener('submit',e=>{
+  if(e.target.id==='design-form'){
+    e.preventDefault();
+    try{
+      if(S.over)fail('insolvent');
+      const id=registerDesign(S,U.design);
+      U.sku=id;U.product=id;U.design=defaultDesign();save();nav('production');render();notice(T.designSaved);
+    }catch(err){notice(err.message);}
+    return;
+  }
   if(e.target.id!=='found-form')return;
   e.preventDefault();
   const name=draft.name.trim(),field=e.target.elements.companyName;
@@ -101,7 +117,7 @@ root.addEventListener('submit',e=>{
   if(S && !confirm(T.resetConfirm))return;
   const settings={...draft,name};
   S=newGame(Date.now()>>>0,settings);founding=false;stopClock();
-  Object.assign(U,{raw:DB.raw[0],product:DB.products[0],sku:DB.products[0],material:DB.raw[0],site:'office',tab:'raw',speed:0});
+  Object.assign(U,{design:null,priceBasis:'targetMargin',batch:DB.operations.batch[0],exportQty:DB.trade.lots[0],qty:DB.trade.lots[0],resaleQty:DB.trade.lots[0],contractQty:DB.operations.batch[0],route:'road',raw:DB.raw[0],product:DB.products[0],sku:DB.products[0],material:DB.raw[0],site:'office',tab:'raw',speed:0});
   Harbor.focus('office');nav('overview');save();render();
 });
 root.addEventListener('change',e=>{
@@ -112,7 +128,24 @@ root.addEventListener('change',e=>{
     }
     return;
   }
+  const tech=e.target.dataset.tech;
+  if(tech){
+    U.design.techs=e.target.checked?[...U.design.techs,tech]:U.design.techs.filter(id=>id!==tech);
+    render();return;
+  }
   const key=e.target.dataset.field;if(!key)return;
+  if(['family','subtype','tier','finish','priceBasis'].includes(key)){
+    if(key==='priceBasis')U.priceBasis=e.target.value;
+    else {
+      U.design[key]=key==='subtype'?Number(e.target.value):e.target.value;
+      if(key==='family')U.design.subtype=0;
+    }
+    render();return;
+  }
+  if(key==='channel'){
+    if(!S.over){S.player.channel=Number(e.target.value);save();}
+    render();return;
+  }
   if(key==='rate'||key==='retailShare') {
     if(S.over){render();return;}
     const policy=key==='rate'?S.player.quotes:(S.player.retailShare??={});
@@ -139,13 +172,13 @@ root.addEventListener('click',e=>{
   const action=button.dataset.act,id=button.dataset.id,p=S?.player;
   try{
     const commands={
-      acquire:()=>acquire(S,id),build:()=>improve(S,'build'),lines:()=>improve(S,'lines'),docks:()=>improve(S,'docks'),
+      project:()=>startProject(S,id),acquire:()=>acquire(S,id),build:()=>improve(S,'build'),lines:()=>improve(S,'lines'),docks:()=>improve(S,'docks'),
       contract:()=>contract(S,U.product,U.buyer,U.contractQty),resell:()=>resell(S,U.raw,U.resaleQty),order:()=>purchase(S,p,U.raw,U.route,U.qty),make:()=>enqueue(S,p,U.sku,U.batch),research:()=>research(S,p,U.sku),
       export:()=>shipExport(S,p,U.product,U.exportQty),borrow:()=>bank(S,true),repay:()=>bank(S,false)
     };
     if(commands[action]){
       if(S.over)fail('insolvent');commands[action]();save();
-      const msg={contract:'contractBtn',resell:'buyback',order:'purchased',make:'queue',research:'ready',export:'exportBtn',borrow:'borrow',repay:'repay',acquire:id==='office'?'leased':'acquired',build:'builtNews',lines:'upgrade',docks:'upgrade'};
+      const msg={project:'researchStarted',contract:'contractBtn',resell:'buyback',order:'purchased',make:'queue',research:'ready',export:'exportBtn',borrow:'borrow',repay:'repay',acquire:id==='office'?'leased':'acquired',build:'builtNews',lines:'upgrade',docks:'upgrade'};
       notice(T[msg[action]]);
     } else switch(action){
       case 'nav':nav(id);break;
@@ -162,6 +195,7 @@ root.addEventListener('click',e=>{
       case 'zoomOut':Harbor.zoom(-1);return;
       case 'good':U.tab=DB.raw.includes(id)?'raw':'products';U[U.tab==='raw'?'raw':'product']=id;nav('market');break;
       case 'marketTab':U.tab=id;break;
+      case 'designedSku':U.sku=id;nav('production');break;
       case 'sku':U.sku=id;break;
       case 'firm':U.firm=id;nav('firms');break;
       case 'firmMap':U.site=DB.sites.find(a=>a.firm===U.firm).id;Harbor.focus(U.site);nav('map');break;

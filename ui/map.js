@@ -3,7 +3,7 @@ const Harbor = (() => {
   const m=DB.map, t=m.tile, h=t/2, scale=m.renderScale;
   const iso=(x,y,z=0)=>[(x-y)*t,(x+y)*h-z];
   const noise=(x,y,n=0)=>{const a=Math.sin(x*127.1+y*311.7+n*74.7+m.seed)*43758.5453;return a-Math.floor(a);};
-  let ctx, origin=[0,0], atlas, atlasOffset, canvas, state, pick, hot=[], frame, last=0;
+  let ctx, origin=[0,0], atlas, atlasSector, atlasOffset, canvas, state, pick, hot=[], frame, last=0;
   let center=m.center.slice(), zi=m.initialZoom, drag=null;
   const keys=new Set();
   function poly(color,pts) {
@@ -21,6 +21,15 @@ const Harbor = (() => {
   }
   const cream=['#dfd9bb','#c0b793','#928d77'], blue=['#74939d','#516f7c','#354f60'], steel=['#99a7a2','#727e7b','#505d61'], brick=['#d49063','#b57451','#86523e'], white=['#e2e2cf','#bdbfa9','#919982'];
   function building(x,y,type,variant=0) {
+    const mode=DB.sector?.mode;
+    if(mode==='service' && ['office','factory','rival'].includes(type)) {
+      box(x-1.2,y-.9,2.4,1.8,0,9,cream);
+      box(x-1.3,y-1,2.6,2,9,2,brick);
+      for(let i=0;i<6;i++) box(x-1.2+i*.4,y+.84,.4,.48,6,1.5,i%2?cream:brick);
+      for(let i=0;i<3;i++) box(x-.96+i*.71,y+.9,.42,.04,1,4,blue);
+      return;
+    }
+    if(mode==='digital' && ['factory','rival'].includes(type)) type='office';
     const industrial=['factory','supplier','rival','warehouse','terminal'].includes(type);
     if(type==='land') {
       plane(x-1.25,y-1.22,2.7,2.55,0,'#9e9272');
@@ -174,7 +183,7 @@ const Harbor = (() => {
   }
   function move(x,y){center=[clamp(center[0]+x+y,0,m.width-1),clamp(center[1]-x+y,0,m.height-1)];}
   function mount(el,read,onPick){
-    stop(); canvas=el;state=read;pick=onPick;if(!atlas)makeAtlas();
+    stop(); canvas=el;state=read;pick=onPick;if(!atlas || atlasSector!==DB.sector){atlasSector=DB.sector;makeAtlas();}
     canvas.onpointerdown=e=>{canvas.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY};};
     canvas.onpointermove=e=>{if(!drag)return;move((drag.x-e.clientX)/(2*t*scale*m.zoom[zi]),(drag.y-e.clientY)/(2*h*scale*m.zoom[zi]));drag.x=e.clientX;drag.y=e.clientY;};
     canvas.onpointerup=e=>{

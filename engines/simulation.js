@@ -3,16 +3,18 @@ function day(s) {
   requireOffice(s);
   if(s.over) fail('insolvent');
   s.day++;
+  advanceProject(s);
   economyDay(s); supplyDay(s);
   const companies=makers(s), rivals=companies.filter(f=>f!==s.player && !f.retired);
   // Rotating purchase priority prevents a permanent first mover in a shortage.
   const offset=rivals.length ? s.day%rivals.length : 0, ordered=rivals.slice(offset).concat(rivals.slice(0,offset));
   for(const f of ordered) strategy(s,f);
-  for(const f of companies) { f.volume=0; f.sold=blank(); f.exportUsed=blank(); }
+  for(const f of companies) { openServiceDay(s,f); f.channelSales=0; f.volume=0; f.sold=blank(); f.exportUsed=blank(); }
   logisticsDay(s);
   for(const f of ordered) operateAI(s,f);
   runReorders(s); runWorkPlan(s);
   for(const f of companies) if(!f.retired) productionDay(s,f);
+  for(const f of companies) if(!f.retired) issueLicenses(f);
   marketDay(s);
   for(const f of companies) {
     if(f.retired) continue;

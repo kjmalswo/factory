@@ -31,14 +31,18 @@ function purchase(s,f,k,route,qty) {
 function exportQuote(s,k) {
   return Math.round(marketPrice(s,k)*DB.trade.exportPremium*s.fx/DB.trade.fx)-DB.trade.exportFee;
 }
-const exportLimit = (s,k) => Math.max(0,Math.floor(DB.goods[k].demand*s.demand*DB.trade.exportDemand)-sum([s.player,...values(s.firms)].map(f=>f.exportUsed[k])));
+function exportLimit(s,k) {
+  const group=productKeys().filter(id=>familyOf(id)===familyOf(k));
+  const used=sum(makers(s).map(f=>sum(group.map(id=>f.exportUsed[id]||0))));
+  return Math.max(0,Math.floor(DB.goods[k].demand*s.demand*DB.trade.exportDemand)-used);
+}
 function shipExport(s,f,k,qty) {
   if(f.id==='player') requireOffice(s);
-  if(!DB.products.includes(k) || !Number.isInteger(qty) || qty<1) fail('invalid');
+  if(!productKeys().includes(k) || !Number.isInteger(qty) || qty<1) fail('invalid');
   if(qty>f.stock[k]) fail('exportEmpty');
   if(qty>exportLimit(s,k)) fail('exportLimit');
   f.stock[k]-=qty; f.exportUsed[k]+=qty;
-  s.cargos.push({owner:f.id,k,qty,cost:f.basis[k],receivable:exportQuote(s,k),from:f.id,route:'loading',due:s.day+1});
+  s.cargos.push({owner:f.id,k,qty,cost:f.basis[k],receivable:exportQuote(s,k),from:f.id,route:DB.sector.mode==='digital'?'export':'loading',due:s.day+1});
 }
 function buybackQuote(s,k) {
   const f=s.firms[supplierOf(k).id], unit=Math.round(marketPrice(s,k)*DB.trade.resaleDiscount);
@@ -56,13 +60,14 @@ function resell(s,k,qty) {
 }
 function contractQuote(s,k,id) {
   const buyer=s.firms[id], d=profile(id);
-  if(!DB.products.includes(k)||!d||d.raw) fail('invalid');
+  if(!productKeys().includes(k)||!d||d.raw) fail('invalid');
   const unit=Math.round(Math.min(marketPrice(s,k),buyer.quotes[k]||marketPrice(s,k))*DB.trade.contractDiscount);
-  const competitors=makers(s).filter(f=>f.id!==id && (f.product===k || f.stock[k]>0)).length;
+  const group=productKeys().filter(i=>familyOf(i)===familyOf(k));
+  const competitors=makers(s).filter(f=>f.id!==id && (f.product===familyOf(k) || group.some(i=>f.stock[i]>0))).length;
   const target=Math.ceil(demandFor(s,k)*d.quality*DB.trade.wholesaleCoverage/(1+competitors));
-  const expected=buyer.stock[k]+pendingInput(s,buyer,k)+sum(buyer.jobs.filter(j=>j.k===k).map(j=>j.qty));
+  const expected=sum(group.map(i=>buyer.stock[i]+pendingInput(s,buyer,i)))+sum(buyer.jobs.filter(j=>familyOf(j.k)===familyOf(k)).map(j=>j.qty));
   const funds=Math.floor((buyer.cash-DB.ai.reserve)/(unit+DB.trade.routes.road.freight));
-  const limit=buyer.retired ? 0 : Math.max(0,Math.min(target-expected,funds,spaceFor(s,buyer,k)));
+  const limit=buyer.retired || DB.sector.mode==='service' ? 0 : Math.max(0,Math.min(target-expected,funds,spaceFor(s,buyer,k)));
   return {unit,limit};
 }
 function contract(s,k,id,qty) {

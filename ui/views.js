@@ -35,13 +35,13 @@ const options=(arr,val,label=x=>x)=>arr.map(x=>'<option value="'+x+'" '+(String(
 const select=(id,title,opts)=>'<label class="field">'+title+'<select data-field="'+id+'">'+opts+'</select></label>';
 const qtyOptions=(arr,val)=>options(arr,val,pcs);
 const tickerChange=k=>{
-  const hist=S.market[k].history,prev=hist.at(-2)??hist[0];return (hist.at(-1)/prev-1)*100;
+  const hist=S.market[familyOf(k)].history,prev=hist.at(-2)??hist[0];return (hist.at(-1)/prev-1)*100;
 };
 function delta(k) {
   const d=tickerChange(k);return '<span class="delta '+(d>0?'up':d<0?'down':'')+'">'+(d>0?'↗ ':d<0?'↘ ':'— ')+Math.abs(d).toFixed(1)+'%</span>';
 }
 function spark(k) {
-  const a=S.market[k].history, low=Math.min(...a),range=Math.max(...a)-low;
+  const a=S.market[familyOf(k)].history, low=Math.min(...a),range=Math.max(...a)-low;
   const points=a.length<2?'0,10 54,10':a.map((v,i)=>(i*54/(a.length-1)).toFixed(1)+','+(range?17-14*(v-low)/range:10).toFixed(1)).join(' ');
   return '<svg class="spark" aria-label="'+T.trend+'" viewBox="0 0 54 20"><polyline points="'+points+'" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
 }
@@ -66,11 +66,12 @@ function itemLogo(k) {
     ssd:['.xxxxxx.','x......x','x.xxxx.x','x.x..x.x','x.xxxx.x','x......x','.xxxxxx.','..x.xx..'],
     pc:['.xxxxxx.','xx....xx','xx.xx.xx','xx....xx','xx.xx.xx','xx....xx','xxxxxxxx','..x..x..']
   }[k];
+  if(!pattern) return '<span class="item-icon">'+(DB.raw.includes(k)?icon('box',18):sectorSprite(DB.sector.icon))+'</span>';
   let d='';pattern.forEach((r,y)=>[...r].forEach((c,x)=>{if(c==='x')d+='M'+x+' '+y+'h1v1h-1z';}));
   return '<span class="item-icon '+k+'"><svg viewBox="-1 -1 10 10" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="'+d+'"/></svg></span>';
 }
 function marketTable(keys,link=true) {
-  return '<div class="table-wrap"><table><thead><tr>'+[T.item,T.price,T.change,T.trend].map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+keys.map(k=>'<tr><td>'+(link?btn('good',itemLogo(k)+DB.goods[k].name,'item-link','data-id="'+k+'"'):DB.goods[k].name)+'</td><td>'+won(marketPrice(S,k))+'</td><td>'+delta(k)+'</td><td>'+spark(k)+'</td></tr>').join('')+'</tbody></table></div>';
+  return '<div class="table-wrap"><table><thead><tr>'+[T.item,T.price,T.change,T.trend].map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+keys.map(k=>'<tr><td>'+(link?btn('good',itemLogo(k)+esc(DB.goods[k].name),'item-link','data-id="'+k+'"'):esc(DB.goods[k].name))+'</td><td>'+won(marketPrice(S,k))+'</td><td>'+delta(k)+'</td><td>'+spark(k)+'</td></tr>').join('')+'</tbody></table></div>';
 }
 function mapPanel() {
   return '<section class="panel map-panel">'+head(T.mapTitle,T.mapTag,'<span class="map-region">'+icon('pin',14)+T.mapSub+'</span>')+
@@ -103,7 +104,7 @@ function overview() {
 function marketView() {
   const raw=U.tab==='raw',k=raw?U.raw:U.product, p=S.player;
   const tabs='<div class="tabs">'+['raw','products'].map((v,i)=>btn('marketTab',[T.rawTab,T.productTab][i],v===U.tab?'active':'','data-id="'+v+'"')).join('')+'</div>';
-  const goods=(raw?DB.raw:DB.products).map(i=>btn('good',itemLogo(i)+'<span>'+DB.goods[i].name+'</span><strong>'+won(marketPrice(S,i))+'</strong>'+delta(i),i===k?'good active':'good','data-id="'+i+'"')).join('');
+  const goods=(raw?DB.raw:productKeys()).map(i=>btn('good',itemLogo(i)+'<span>'+esc(DB.goods[i].name)+'</span><strong>'+won(marketPrice(S,i))+'</strong>'+delta(i),i===k?'good active':'good','data-id="'+i+'"')).join('');
   let form;
   if(raw) {
     const q=quote(S,k,U.route,U.qty);
@@ -111,24 +112,27 @@ function marketView() {
       row(T.source,firmName(q.seller))+row(T.stock,pcs(q.stock))+row(T.unitPrice,won(q.unit))+row(T.freight,won(q.freight))+row(T.tariff,won(q.tariff))+row(T.landed,won(q.landed))+row(T.daysTo,q.days+' '+T.dayUnit)+row(T.total,won(q.total))+btn('order',T.order+icon('arrow',16),'primary wide');
   } else {
     const can=exportLimit(S,k);
-    form=row(T.stock,pcs(p.stock[k]))+row(T.costBasis,won(p.basis[k]))+row(T.saleMargin,won(askingPrice(S,p,k)-(p.stock[k]?p.basis[k]:recipeCost(S,k))))+select('rate',T.pricePolicy,options(DB.market.priceWeights,p.quotes[k],v=>Math.round(v*100)+'%'))+'<p>'+T.priceHelp+'</p>'+select('retailShare',T.shareTitle,options(DB.operations.retailShares,p.retailShare?.[k]??1,v=>T.shareLabels[DB.operations.retailShares.indexOf(v)]))+'<p>'+T.shareHelp+'</p><hr>'+row(T.exportPrice,won(exportQuote(S,k)))+row(T.exportLimit,pcs(can))+select('exportQty',T.amount,qtyOptions(DB.operations.batch,U.exportQty))+btn('export',T.exportBtn+icon('arrow',16),'primary wide')+'<p>'+T.exportHelp+'</p>';
+    const ask=askingPrice(S,p,k),net=Math.round(ask*(1-channelFor(p).fee));
+    form=channelForm(p)+row(T.stock,pcs(p.stock[k]))+row(T.listPrice,won(ask))+row(T.channelNet,won(net))+row(T.saleMargin,won(net-(p.stock[k]?p.basis[k]:unitRecipe(S,k))))+select('rate',T.pricePolicy,options(DB.market.priceWeights,p.quotes[k],v=>Math.round(v*DB.development.percent)+'%'));
+    if(DB.sector.mode==='service') form+='<p>'+T.serviceHelp+'</p>';
+    else form+=select('retailShare',T.shareTitle,options(DB.operations.retailShares,p.retailShare?.[k]??1,v=>T.shareLabels[DB.operations.retailShares.indexOf(v)]))+'<p>'+T.shareHelp+'</p><hr>'+row(T.exportPrice,won(exportQuote(S,k)))+row(T.exportLimit,pcs(can))+select('exportQty',T.amount,qtyOptions(DB.trade.lots,U.exportQty))+btn('export',T.exportBtn+icon('arrow',16),'primary wide')+'<p>'+T.exportHelp+'</p>';
   }
   const peer=contractQuote(S,U.product,U.buyer),back=buybackQuote(S,U.raw);
   const wholesale=raw?panel(T.buyback,'<p>'+T.buybackHelp+'</p>'+row(T.resaleUnit,won(back.unit))+row(T.buybackLimit,pcs(back.limit))+select('resaleQty',T.amount,qtyOptions(DB.trade.lots,U.resaleQty))+btn('resell',T.buyback,'wide subtle')):panel(T.contract,'<p>'+T.contractHelp+'</p>'+select('buyer',T.buyer,options(DB.ai.firms.filter(d=>!d.raw).map(d=>d.id),U.buyer,firmName))+row(T.contractUnit,won(peer.unit))+row(T.contractLimit,pcs(peer.limit))+select('contractQty',T.amount,qtyOptions(DB.operations.batch,U.contractQty))+btn('contract',T.contractBtn,'wide subtle'));
-  return tabs+'<div class="two-col"><div>'+panel(raw?T.rawTab:T.productTab,'<p>'+ (raw?T.marketLead:T.priceHelp)+'</p><div class="goods-list">'+goods+'</div>'+row(T.holding,pcs(p.stock[k]))+row(T.unitSpace,unitSpace(k)+' '+T.warehouseUnit)+row(T.marketDemand,pcs(S.market[k].demand))+row(T.exchangeRate,fmt(S.fx)))+wholesale+'</div>'+panel(DB.goods[k].name,form)+'</div>';
+  return tabs+'<div class="two-col"><div>'+panel(raw?T.rawTab:T.productTab,'<p>'+ (raw?T.marketLead:T.priceHelp)+'</p><div class="goods-list">'+goods+'</div>'+row(T.holding,pcs(p.stock[k]))+row(T.unitSpace,unitSpace(k)+' '+T.warehouseUnit)+row(T.marketDemand,pcs(S.market[familyOf(k)].demand))+row(T.exchangeRate,fmt(S.fx)))+(raw||DB.sector.mode!=='service'?wholesale:'')+'</div>'+panel(esc(DB.goods[k].name),form)+'</div>';
 }
 function productionView() {
   const p=S.player, k=U.sku, g=DB.goods[k], cap=facility(S);
-  const recipes=DB.products.map(i=>btn('sku',itemLogo(i)+'<span>'+DB.goods[i].name+'</span>'+tag(p.unlocked.includes(i)?T.ready:T.research,p.unlocked.includes(i)?'green':''),i===k?'good active':'good','data-id="'+i+'"')).join('');
-  const form=entries(g.bom).map(([i,n])=>row(DB.goods[i].name,fmt(n)+' / '+pcs(p.stock[i]))).join('')+row(T.conversion,won(g.conversion))+row(T.unitCost,won(recipeCost(S,k)))+select('batch',T.amount,qtyOptions(DB.operations.batch,U.batch))+(p.unlocked.includes(k)?btn('make',T.make+icon('arrow',16),'wide primary'):btn('research',T.research+' · '+won(g.research),'wide primary'));
+  const recipes=productKeys().map(i=>btn('sku',itemLogo(i)+'<span>'+esc(DB.goods[i].name)+'</span>'+tag(p.unlocked.includes(i)?T.ready:T.research,p.unlocked.includes(i)?'green':''),i===k?'good active':'good','data-id="'+i+'"')).join('');
+  const form=(S.designs?.[k]?designSummary(S.designs[k]):'')+entries(g.bom).map(([i,n])=>row(esc(DB.goods[i].name),fmt(n)+' / '+pcs(p.stock[i]))).join('')+row(T.conversion,won(g.conversion))+row(T.unitCost,won(recipeCost(S,k)))+select('batch',T.amount,qtyOptions(DB.operations.batch,U.batch))+(p.releases?.[k]?tag(T.released,'green'):p.unlocked.includes(k)?btn('make',T.make+icon('arrow',16),'wide primary'):btn('research',T.research+' · '+won(g.research),'wide primary'));
   const repeat=select('repeat',T.dailyBatch,options([0,...DB.operations.batch],p.plans?.[k]||0,n=>n?pcs(n):T.disabled));
-  return '<div class="two-col">'+panel(T.sku,'<div class="goods-list">'+recipes+'</div>'+row(T.capacity,fmt(cap.work)+' '+T.workUnit)+row(T.status,T[bottleneck(S)])+btn('lines',T.line+' · '+won(DB.operations.lineCost),'wide subtle'))+panel(g.name,'<p>'+T.costHelp+'</p>'+form)+'</div>'+panel(T.repeatTitle,'<p>'+T.repeatHelp+'</p>'+repeat)+panel(T.queue,p.jobs.length?p.jobs.map(j=>row(DB.goods[j.k].name,pcs(j.qty)+' · '+T.progress+' '+(j.qty*DB.goods[j.k].work-j.progress).toFixed(1))).join(''):empty(T.noJobs));
+  return '<div class="two-col">'+panel(T.sku,navbtn('design',T.newDesign,'subtle')+'<div class="goods-list">'+recipes+'</div>'+row(T.capacity,fmt(cap.work)+' '+T.workUnit)+row(T.status,T[bottleneck(S)])+btn('lines',T.line+' · '+won(DB.operations.lineCost),'wide subtle'))+panel(esc(g.name),'<p>'+(DB.sector.mode==='digital'?T.digitalInfo:T.costHelp)+'</p>'+form)+'</div>'+(DB.sector.mode==='digital'?'':panel(T.repeatTitle,'<p>'+T.repeatHelp+'</p>'+repeat))+panel(T.queue,p.jobs.length?p.jobs.map(j=>row(esc(DB.goods[j.k].name),pcs(j.qty)+' · '+T.progress+' '+(j.qty*DB.goods[j.k].work-j.progress).toFixed(1))).join(''):empty(T.noJobs));
 }
 function logisticsView() {
   const p=S.player,cap=facility(S),cargo=S.cargos.filter(c=>c.owner==='player'),rule=p.reorder?.[U.material]||{};
-  const orders=select('material',T.item,options(DB.raw,U.material,k=>DB.goods[k].name))+select('target',T.targetStock,options(DB.planning.targets,rule.target||0,v=>v?pcs(v):T.disabled))+select('ceiling',T.ceiling,options(DB.planning.ceilings,rule.ceiling||DB.planning.initialCeiling,v=>won(v*DB.goods[U.material].base)))+select('priority',T.route,options(DB.planning.routes,rule.priority||DB.planning.routes[0],v=>v==='cost'?T.costPriority:T.timePriority));
+  const orders=select('material',T.item,options(DB.raw,U.material,k=>esc(DB.goods[k].name)))+select('target',T.targetStock,options(DB.planning.targets,rule.target||0,v=>v?pcs(v):T.disabled))+select('ceiling',T.ceiling,options(DB.planning.ceilings,rule.ceiling||DB.planning.initialCeiling,v=>won(v*DB.goods[U.material].base)))+select('priority',T.route,options(DB.planning.routes,rule.priority||DB.planning.routes[0],v=>v==='cost'?T.costPriority:T.timePriority));
 
-  return '<div class="two-col">'+panel(T.arrivalWork,'<p>'+T.logisticsHelp+'</p>'+row(T.dock,fmt(cap.dock)+' '+T.perday)+row(T.usedStorage,fmt(occupied(S,p))+' / '+fmt(cap.storage))+row(T.status,T[bottleneck(S)])+btn('docks',T.dockUpgrade+' · '+won(DB.operations.dockCost),'wide subtle'))+panel(T.stock,entries(p.stock).map(([i,n])=>row(DB.goods[i].name,pcs(n))).join(''))+'</div>'+panel(T.replenish,'<p>'+T.replenishHelp+'</p>'+orders)+panel(T.shipment,'<p>'+T.spaceHelp+'</p>'+(cargo.length?cargo.map(c=>row(DB.goods[c.k].short+' · '+(c.route==='export'?T.export:c.route==='loading'?T.loading:DB.trade.routes[c.route].name),pcs(c.qty)+' · '+(c.due<=S.day?T.backlog:T.dayPrefix+c.due))).join(''):empty(T.noCargo)));
+  return '<div class="two-col">'+panel(T.arrivalWork,'<p>'+T.logisticsHelp+'</p>'+row(T.dock,fmt(cap.dock)+' '+T.perday)+row(T.usedStorage,fmt(occupied(S,p))+' / '+fmt(cap.storage))+row(T.status,T[bottleneck(S)])+btn('docks',T.dockUpgrade+' · '+won(DB.operations.dockCost),'wide subtle'))+panel(T.stock,entries(p.stock).map(([i,n])=>row(esc(DB.goods[i].name),pcs(n))).join(''))+'</div>'+panel(T.replenish,'<p>'+T.replenishHelp+'</p>'+orders)+panel(T.shipment,'<p>'+T.spaceHelp+'</p>'+(cargo.length?cargo.map(c=>row(esc(DB.goods[c.k].short)+' · '+(c.route==='export'?T.export:c.route==='loading'?T.loading:DB.trade.routes[c.route].name),pcs(c.qty)+' · '+(c.due<=S.day?T.backlog:T.dayPrefix+c.due))).join(''):empty(T.noCargo)));
 }
 function financeView() {
   const p=S.player,b=DB.finance;
