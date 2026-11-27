@@ -80,12 +80,11 @@ const occupied = (s,f) => storageUsed(f) + sum(s.cargos.filter(c=>c.owner===f.id
 const spaceFor = (s,f,k) => unitSpace(k) ? Math.floor((facility(s,f).storage-occupied(s,f))/unitSpace(k)) : Infinity;
 function newGame(seed = (Date.now() >>> 0), settings=foundingDefaults()) {
   configureCompany(settings);
-  const p = Object.assign(company('player', DB.finance.startingCash), {sites:[], lines:0, docks:0, built:false, plans:{}, reorder:{}, unlocked:[DB.products[0]], milestones:DB.ui.missionSteps.map(() => false)});
-  const s = {designs:{}, version:DB.version, setup:{...settings}, seed, day:1, player:p, firms:{}, foreign:blank(), market:{}, fx:DB.trade.fx, events:[], nextEvent:DB.economy.first, demand:1, cargos:[], ledger:[], news:[], over:false};
+  const p = Object.assign(company('player', DB.finance.startingCash), {sites:[], lines:0, docks:0, built:false, plans:{}, reorder:{}, catalog:[], milestones:DB.ui.missionSteps.map(() => false)});
+  const s = {designs:{}, guideStep:0, version:DB.version, setup:{...settings}, seed, day:1, player:p, firms:{}, foreign:blank(), market:{}, fx:DB.trade.fx, events:[], nextEvent:DB.economy.first, demand:1, cargos:[], ledger:[], news:[], over:false};
   for (const [k, g] of entries(DB.goods)) {
     s.market[k] = {price:g.base, history:[g.base], use:(g.supply || g.demand) * DB.market.initialRawUse, bought:0, demand:g.demand || 0};
     s.foreign[k] = DB.trade.importStock;
-    if (g.bom) { p.quotes[k] = 1; p.retailShare[k] = DB.operations.retailShares[0]; }
   }
   for (const def of DB.ai.firms) {
     const f = Object.assign(company(def.id, def.raw ? DB.ai.supplierCash : DB.ai.cash), {capacity:def.capacity, product:def.product || def.raw, lastPlan:0, lastExpansion:0, lastLaunch:0, reason:'initialReason'});

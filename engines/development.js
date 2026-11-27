@@ -58,11 +58,22 @@ function registerDesign(s,draft) {
   for(const f of [p,...values(s.firms)]) {
     for(const key of ['stock','basis','sold','loyalty','exportUsed']) f[key][id]=0;
   }
-  p.unlocked.push(id);p.quotes[id]=1;p.retailShare[id]=DB.operations.retailShares[0];
+  p.unlocked.push(id);p.catalog.push(id);p.quotes[id]=1;p.retailShare[id]=DB.operations.retailShares[0];
   news(s,'typeOps',T.newDesign,d.name);
   return id;
 }
 function restoreIndustry(s) {
   configureCompany(s.setup);
   for(const [id,d] of entries(s.designs||{})) DB.goods[id]=blueprint(d);
+  const p=s.player;
+  if(!p.catalog){
+    // Keep legacy lines with an economic history; the old unused starter is removed.
+    const legacy=DB.products.filter(id=>p.unlocked.includes(id) && (
+      id!==DB.products[0] || p.stock[id]>0 || p.basis[id]>0 || p.plans?.[id] ||
+      p.releases?.[id] || p.jobs.some(job=>job.k===id) ||
+      s.cargos.some(cargo=>cargo.owner===p.id && cargo.k===id)
+    ));
+    p.catalog=[...Object.keys(s.designs||{}),...legacy];
+    p.unlocked=p.unlocked.filter(id=>p.catalog.includes(id));
+  }
 }

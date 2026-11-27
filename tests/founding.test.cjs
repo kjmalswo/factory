@@ -26,6 +26,17 @@ test('industry founding, custom design, research and first wholesale settlement 
     }
     const S = newGame(4312, settings), p=S.player;
     assert.equal(DB.company, settings.name);
+    const U={tab:'products',product:null,sku:null,page:null};
+    assert.deepEqual(p.catalog,[]);
+    assert.deepEqual(p.unlocked,[]);
+    assert.ok(marketView().includes(T.emptyCatalog));
+    assert.ok(!marketView().includes('data-act="good"'));
+    assert.ok(productionView().includes(T.designFirst));
+    assert.ok(guideCard().includes(T.tutorial));
+    assert.ok(worldShell().includes('id="map-canvas"'));
+    assert.ok(menuBar().includes('data-id="development"'));
+    assert.ok(projectView().includes('role="tooltip"'));
+    assert.ok(projectView().includes('<path class="" d="M'));
     assert.equal(p.cash, Catalog.startup.funding.lean.cash);
     assert.equal(S.demand, eventDef(S.events[0]).factor);
     const [cloth,,buttons] = DB.raw, [top]=DB.products;
@@ -53,6 +64,10 @@ test('industry founding, custom design, research and first wholesale settlement 
     startProject(S,'process');S.day=p.project.due;advanceProject(S);
     const sku=registerDesign(S,design);
     assert.equal(familyOf(sku),top);
+    U.product=sku;U.sku=sku;U.buyer=DB.ai.firms.find(f=>!f.raw).id;U.exportQty=DB.trade.lots[0];U.contractQty=DB.operations.batch[0];
+    assert.ok(marketView().includes('바람 &lt;셔츠&gt;'));
+    assert.ok(!marketView().includes('data-id="'+top+'"'));
+    assert.ok(productionView().includes('바람 &lt;셔츠&gt;'));
     assert.ok(DB.goods[sku].work<DB.goods[top].work);
     assert.equal(askingPrice(S,p,sku),quoteDesign(S,DB.goods[sku]).price);
     enqueue(S,p,sku,2); productionDay(S,p);
@@ -68,6 +83,13 @@ test('industry founding, custom design, research and first wholesale settlement 
     assert.equal(DB.company,settings.name);
     assert.equal(DB.goods[sku].name,design.name);
     assert.ok(restored.player.completed.includes('process'));
+    assert.deepEqual(restored.player.catalog,[sku]);
+    // Existing inventory still has a sales route after a migration.
+    delete restored.player.catalog;
+    restored.player.unlocked.push(top,DB.products[1]);
+    restored.player.stock[top]=1;
+    restoreIndustry(restored);
+    assert.deepEqual(restored.player.catalog,[sku,top,DB.products[1]]);
     assert.ok(restored.player.milestones.slice(0,4).every(Boolean));
   `, context);
 });

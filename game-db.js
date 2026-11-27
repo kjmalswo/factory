@@ -72,6 +72,7 @@ window.GAME_DB = {
   ],
   "nodes": {
     "lab": {
+      "icon": "development",
       "name": "연구개발 부서",
       "department": true,
       "desc": "제품 기술 연구를 시작할 수 있습니다.",
@@ -80,6 +81,7 @@ window.GAME_DB = {
       "needs": []
     },
     "precision": {
+      "icon": "design",
       "tech": 1,
       "name": "정밀 설계",
       "desc": "품질을 높이는 제품 기술을 해금합니다.",
@@ -92,6 +94,7 @@ window.GAME_DB = {
       "costFactor": 1.1
     },
     "process": {
+      "icon": "production",
       "tech": 2,
       "name": "공정 기술",
       "desc": "작업 시간을 단축하는 제품 기술을 해금합니다.",
@@ -103,6 +106,7 @@ window.GAME_DB = {
       "work": 0.72
     },
     "integration": {
+      "icon": "layers",
       "tech": 3,
       "name": "통합 설계",
       "desc": "고급 제품의 품질과 작업 효율을 함께 높입니다.",
@@ -116,6 +120,7 @@ window.GAME_DB = {
       "work": 0.85
     },
     "operations": {
+      "icon": "firms",
       "name": "운영 기획팀",
       "desc": "일일 작업 능력이 증가합니다.",
       "cost": 1200000,
@@ -124,6 +129,7 @@ window.GAME_DB = {
       "work": 4
     },
     "network": {
+      "icon": "market",
       "name": "유통 제휴팀",
       "desc": "계약 유통사의 일일 판매 한도가 늘어납니다.",
       "cost": 950000,
@@ -134,6 +140,7 @@ window.GAME_DB = {
       "capacity": 16
     },
     "warehousing": {
+      "icon": "box",
       "name": "자원 관리팀",
       "desc": "입고 처리량과 보관 용량이 늘어납니다.",
       "cost": 1650000,
@@ -158,6 +165,78 @@ window.GAME_DB = {
     "확장형"
   ]
 } ,
+  "tutorial": [
+  {
+    "target": "map",
+    "title": "산업 지도",
+    "body": "마우스로 끌거나 WASD로 이동하세요. 시설 위에 커서를 올리면 이름이 표시되고, 클릭하면 비용과 용도를 확인할 수 있습니다."
+  },
+  {
+    "target": "site",
+    "title": "첫 사업장",
+    "body": "시설 정보에서 첫 사업장을 임대하세요. 이후 다른 시설도 같은 방식으로 확보할 수 있습니다."
+  },
+  {
+    "target": "design",
+    "title": "첫 제품 설계",
+    "body": "제품명과 사양을 정하고 설계를 등록하세요. 오른쪽에서 필요한 자재와 공수, 예상 판매가를 확인할 수 있습니다."
+  },
+  {
+    "target": "market",
+    "title": "상품 거래소",
+    "body": "설계에 필요한 자재를 발주하세요. 운송 경로마다 운임과 납기가 다릅니다. 완제품 판매에서는 등록한 제품의 가격과 유통사를 정합니다."
+  },
+  {
+    "target": "clock",
+    "title": "운영 시계",
+    "body": "하루 진행 버튼을 누르면 시간이 하루 흐릅니다. 자동 진행 버튼과 배속도 사용할 수 있습니다."
+  },
+  {
+    "target": "logistics",
+    "title": "물류 센터",
+    "body": "입고 예정일과 하역 대기를 확인하세요. 창고가 가득 차면 발주품을 받지 못합니다. 자주 쓰는 자재는 자동 발주를 설정할 수 있습니다."
+  },
+  {
+    "target": "production",
+    "title": "생산과 출시",
+    "body": "자재가 들어오면 품목과 수량을 선택하고 생산을 지시하세요. 하루를 진행하면 대기열 순으로 작업합니다."
+  },
+  {
+    "target": "sales",
+    "title": "첫 판매",
+    "body": "자체 제품을 선택해 판매 배율과 유통사를 정하세요. 판매 가능 재고가 있으면 하루 단위로 국내 판매가 정산됩니다."
+  },
+  {
+    "target": "development",
+    "title": "연구·조직",
+    "body": "아이콘에 마우스를 올리거나 키보드로 선택해 효과를 확인하세요. 선으로 연결된 선행 프로젝트를 완료하면 다음 단계가 열립니다."
+  },
+  {
+    "target": "finance",
+    "title": "재무 장부",
+    "body": "현금, 누적 손익, 대출 잔액을 확인하세요. 매출과 실제 입금 내역은 거래 장부에 기록됩니다."
+  },
+  {
+    "target": "firms",
+    "title": "기업 정보",
+    "body": "공급사와 경쟁사의 주력 품목, 가동 상태, 최근 판단을 확인할 수 있습니다."
+  },
+  {
+    "target": "news",
+    "title": "산업 통신",
+    "body": "경기 충격과 경쟁사 소식을 확인하세요. 공급 차질이나 수요 급등에 맞춰 발주·판매 계획을 조정할 수 있습니다."
+  },
+  {
+    "target": "overview",
+    "title": "운영 현황",
+    "body": "원자재 시세와 경영 목표를 확인하세요. 목표를 눌러 관련 화면으로 이동할 수 있습니다."
+  },
+  {
+    "target": "system",
+    "title": "게임 설정",
+    "body": "게임 저장, 실행본 내려받기, 새 회사 설립을 할 수 있습니다. 물음표 버튼으로 튜토리얼을 다시 열 수 있습니다."
+  }
+],
   "startup": {
   "defaultSector": "devices",
   "legacySector":"electronics",
@@ -628,7 +707,7 @@ window.GAME_DB = {
       {"id":"slump","name":"경기 침체","detail":"구매 연기로 국내외 완제품 주문이 줄어듭니다.","duration":14,"factor":0.67,"weight":3},
       {"id":"crash","name":"신용 경색 · 대공황","detail":"소비와 수출 주문이 급감하고 미판매 재고가 쌓입니다.","duration":19,"factor":0.34,"weight":1}
     ]},
-  "map":{"width":37,"height":26,"center":[14,12],"tile":10,"zoom":[1,1.25,1.6,2],"initialZoom":1,"pan":9,"maxFrame":0.045,"renderScale":2,"roadsX":[5,10,15,20,25,30],"roadsY":[3,8,13,18],"waterX":32,"waterY":22,"seed":1948,"railY":2,"labelLift":2.2},
-  "ui":{"design":"제품 설계","development":"연구·조직","designName":"제품명","newDesign":"설계 등록","designHelp":"사양을 선택하면 예상 원가와 판매가가 바뀝니다.","family":"카테고리","subtype":"세부 카테고리","tier":"제품 등급","finish":"마감 품질","appliedTech":"적용 기술","targetMargin":"목표 매출총이익률","costRatio":"목표 원가율","designFee":"설계 등록비","workRequired":"필요 공수","designPrice":"목표 판매가","designReady":"등록된 설계","pricingBasis":"가격 설정 기준","pricingValue":"비율 (%)","emptyDesign":"등록한 설계가 없습니다.","sameName":"사용 중인 제품명입니다.","invalidName":"제품명을 입력하세요.","badMargin":"허용 범위 안에서 원가율 또는 마진을 설정하세요.","noTech":"선행 연구를 먼저 완료하세요.","researchTree":"제품 기술","companyTree":"회사 조직","prerequisites":"선행 단계","noRequirements":"바로 시작 가능","startProject":"프로젝트 시작","underway":"진행 중","projectBusy":"진행 중인 프로젝트가 있습니다.","daysRequired":"소요 기간","doneProject":"개발 완료","retailChannel":"유통사","channelFee":"판매 수수료","channelReach":"고객 도달 배율","channelLimit":"일일 판매 한도","listPrice":"현재 판매가","disposed":"당일 메뉴 폐기","released":"출시 완료","alreadyReleased":"이미 개발 중이거나 출시된 타이틀입니다.","digitalInfo":"타이틀마다 한 번 개발합니다. 출시 후 매일 이용권을 판매할 수 있습니다.","retailInfo":"선택한 유통사는 매출에서 수수료를 받고 고객 도달 범위와 일일 판매 한도를 결정합니다.","allocatedCost":"예상 판매량 기준 단위 원가","industry":"업종","techHint":"연구·조직에서 추가 기술을 개발할 수 있습니다.","priceNote":"목표가는 단위 원가 기준입니다. 실제 순수익에는 유통 수수료와 운영비가 반영됩니다.","digitalReference":"개발비 배분 기준 판매량","projectPrice":"프로젝트 예산","serviceHelp":"판매하고 남은 당일 메뉴는 다음 영업 시작 시 폐기됩니다.","menuHold":"예약 납품용 보관","directDispatch":"주문 인도","designSaved":"설계를 등록했습니다.","researchStarted":"프로젝트를 시작했습니다.","techBase":"기본 기술","skuPrefix":"model-","previewCost":"예상 단위 원가","channelNet":"수수료 차감 단가","setupTitle": "회사 설립", "setupEn": "COMPANY REGISTRATION", "setupHint": "회사와 첫 사업 분야를 정하세요.", "companyName": "회사명", "placeholder": "예: 해원산업", "defaultName": "해원산업", "sector": "사업 분야", "funding": "창업 자금", "climate": "초기 경기", "establish": "회사 설립하기", "cancelSetup": "현재 회사로 돌아가기", "setupValidation": "회사명을 입력하세요.", "sitePreview": "창업 예정지", "setupId": "HW / 01", "startRegion": "해원항", "startDistrict": "산업지구", "sectorOverview": "주력 공급망", "startingSite": "첫 사업장", "sectorList": "업종 선택", "previewTitle": "해원항 산업지구", "fundingHint": "자기자본", "namedCompany": "운영 기업", "productGroup": "제조업", "supplyCapacity": "입고량",
-    "title":"PORTSIDE | 항만 기업 경영","kicker":"산업 운영 본부","overview":"운영 현황","map":"산업 지도","market":"상품 거래소","production":"생산 관리","logistics":"물류 센터","finance":"재무 장부","firms":"기업 정보","news":"산업 통신","industry":"산업","network":"네트워크","manage":"경영","system":"시스템","download":"실행본 내려받기","save":"저장","saved":"저장됨","saveFail":"기기 저장 공간을 확인하세요.","reset":"새 회사","resetConfirm":"현재 회사를 지우고 처음부터 시작할까요?","credit":"자금","debt":"차입금","income":"누적 순이익","clock":"운영 시계","pause":"일시정지","play":"시간 진행","next":"하루 진행","day":"일차","dayUnit":"일","units":"개","perday":"개/일","money":"원","man":"만","eok":"억","workUnit":"공수/일","warehouseUnit":"칸","capacity":"작업 능력","dock":"하역 능력","storage":"창고 용량","usedStorage":"점유 공간","zone":"권역","daily":"일일 고정비","cost":"취득 비용","lease":"임대 보증금","site":"시설 정보","owned":"자사 시설","available":"입주 가능","partner":"외부 기업","office":"사무실","factory":"공장","warehouse":"창고","land":"산업 부지","terminal":"터미널","supplier":"공급사","rival":"제조사","leaseBtn":"사무실 임대","buy":"시설 확보","build":"조립동 건설","built":"조립동","chooseSite":"지도에서 시설을 선택하세요.","requiresOffice":"먼저 소형 사무실을 임대하세요.","shortCash":"가용 자금이 부족합니다.","duplicate":"이미 확보한 시설입니다.","intro":"소형 사무실을 임대해 첫 조립 라인을 여세요.","mapSub":"해원항 · 대한민국","live":"운영 중","standby":"대기","mapLegend":"시설 범례","pan":"이동","drag":"드래그","zoomIn":"확대","zoomOut":"축소","center":"본사로 이동","close":"닫기","pulse":"시장 동향","pulseSub":"직전 거래일 대비","item":"품목","price":"시장가","change":"등락률","trend":"가격 추이","allMarket":"거래소 열기","feed":"산업 속보","allNews":"전체 기록","status":"운영 진단","exchangeRate":"원/달러","normal":"안정","events":"경기 상황","mission":"경영 목표","missionSteps":["사무실 임대","첫 자재 조달","첫 제품 조립","첫 제품 판매","생산 거점 확장","누적 이익 달성"],"missionHints":["지도에서 소형 사무실의 임대 조건을 확인하세요.","거래소에서 메모리 칩 10개와 회로 기판 5개를 확보하세요.","자재 입고 후 생산 관리에서 메모리 모듈 5개를 지시하세요.","재고에 판매가를 지정하고 하루를 진행하세요.","산업 지도에서 공장을 확보하거나 부지에 조립동을 건설하세요.","가격과 가동률을 조정해 목표 순이익을 달성하세요."],"complete":"목표 달성","inspect":"시설 보기","go":"열기","rawTab":"원자재 조달","productTab":"완제품 판매","amount":"수량","order":"발주","foreign":"해외","local":"국내","import":"수입","tariff":"관세","freight":"운임","landed":"도착 원가","daysTo":"운송 일수","stock":"가용 재고","outOfStock":"공급사 재고가 부족합니다.","input":"보유 자재","research":"제품 개발","queue":"작업 대기열","make":"생산 지시","missing":"필요한 자재가 부족합니다.","queueFull":"작업 대기열 한도에 도달했습니다.","materials":"자재 명세","conversion":"가공비","noJobs":"대기 중인 작업이 없습니다.","line":"라인 증설","dockUpgrade":"하역장 확장","max":"증설 한도에 도달했습니다.","capacityNeed":"공장 또는 조립동이 필요합니다.","needsLand":"먼저 산업 부지를 확보하세요.","locked":"제품 개발이 필요합니다.","invalid":"거래 조건을 다시 확인하세요.","cashflow":"현금 흐름","borrow":"운영자금 대출","repay":"원금 상환","limit":"대출 한도","interest":"연 이율","ledger":"거래 내역","balance":"현금 잔액","amountMoney":"금액","noHistory":"거래가 없습니다.","date":"영업일","description":"항목","sale":"국내 판매","export":"수출","exportBtn":"수출 선적","exportEmpty":"수출할 완제품이 부족합니다.","pricePolicy":"국내 판매가","priceHelp":"판매 배율은 기본 품목의 시장가와 자체 설계 품목의 목표가에 적용됩니다. 판매 대금은 매일 정산됩니다.","margin":"예상 단위 마진","costBasis":"평균 원가","inTransit":"운송 중","shipment":"화물 명세","arrival":"도착 예정","backlog":"하역 대기","noCargo":"운송 중인 화물이 없습니다.","finished":"완제품 재고","reason":"최근 판단","quality":"품질 지수","cash":"보유 현금","activeProduct":"주력 품목","capacityShort":"생산 능력","firmIntro":"업체별 조달과 재고, 판매가가 매일 시장에서 경쟁합니다.","initialReason":"초기 거래망 확보","supplyReason":"재고와 자금에 맞춰 출하","switchReason":"예상 마진·경쟁 강도에 따라 주력 품목 변경","investReason":"가동률 상승에 대응해 조립 라인 증설","launchReason":"개발비 집행 후 신규 제품 출시","waitReason":"운영자금 보전을 위해 발주 축소","orderReason":"판매 속도와 납기 기준으로 안전재고 확보","reduceReason":"재고 누적으로 생산 감축","initialNews":"해원항 거래소 개장","initialDetail":"소재 공급사와 제조사가 거래를 시작했습니다.","typeMarket":"시장","typeCompany":"기업","typeOps":"운영","leased":"사무실 임대 계약","acquired":"시설 매입","builtNews":"조립동 준공","purchased":"자재 발주","delivered":"화물 입고","manufactured":"제품 조립 완료","upgrade":"설비 투자","expenses":"임차료·설비 유지비","interestPaid":"차입 이자","insolvent":"지급 불능","failedHelp":"현금과 남은 신용 한도로 운영비를 충당할 수 없습니다.","autoLoan":"긴급 운영자금 차입","shipped":"수출 대금 회수","sold":"국내 판매 정산","marketRecovery":"시장 충격 종료","route":"운송 경로","working":"작업 진행","spaceBlock":"창고 포화","inputBlock":"자재 부족","idle":"생산 대기","loaded":"생산 진행","portBlock":"하역 적체","daysLeft":"잔여 일수","unitPrice":"자재 단가","total":"발주 총액","priceIndex":"시장 가격 지수","priceIndexHelp":"원자재·완제품 기준가 평균","volume":"전일 판매","business":"영업 현황","emptyFeed":"기록이 없습니다.","journal":"산업 일지","filterAll":"전체","assets":"운영 자산","facilityCount":"보유 시설","speed":"진행 속도","costHelp":"자재와 가공비는 생산 지시 시 투입합니다.","spaceHelp":"입고 대기 화물은 다음 영업일에 다시 하역합니다.","storageBusy":"창고에 완제품을 보관할 공간이 부족합니다.","exportPrice":"수출 단가","exportHelp":"해외 수요 한도 내에서 선적하고 운송 완료 시 대금을 회수합니다.","exportLimit":"해외 잔여 수요","creditHelp":"운영비 결제 시 잔여 신용 한도에서 자동 차입합니다.","target":"목표 순이익","ready":"개발 완료","sku":"생산 품목","progress":"잔여 작업","firmLink":"기업 장부 보기","lineCount":"라인 증설 횟수","dockCount":"하역장 확장 횟수","logisticsHelp":"발주처의 거리·운송 방식과 보유 시설의 일일 하역 한도가 입고일을 결정합니다.","mapTitle":"해원항 산업 지도","ticker":"원자재 시세","workspace":"운영 콘솔","overviewEn":"OPERATIONS OVERVIEW","dayTag":"DAY","mapTag":"DISTRICT MAP","marketTag":"MARKET WATCH","feedTag":"INDUSTRY WIRE","inspectorTag":"PROPERTY","goalTag":"MILESTONE","mapCode":"HW · 01","regionEn":"HAEWON INDUSTRIAL PORT","systemOnline":"시스템 연결됨","overviewHint":"산업 지도와 거래 현황","companyTag":"PORTSIDE INDUSTRIES","landUse":"시설 용도","selected":"선택","marketSummary":"시장 지수","notTrading":"거래 대기","downloadFail":"실행본을 생성할 수 없습니다. HTTP 서버에서 다시 시도하세요.","currency":"₩","exportRoute":"해원항 → 해외 바이어","source":"출발지","profitHelp":"판매원가와 일일 운영비를 반영합니다.","navigation":"메뉴","more":"자세히","holding":"보유량","queueAhead":"예상 입고","goalTip":"단계별 경영 과제","officeDesc":"소규모 전자제품 조립과 국내외 자재 거래를 시작할 수 있습니다.","factoryDesc":"조립 라인과 자재 보관 공간을 갖춘 생산 시설입니다.","warehouseDesc":"입고 처리량과 재고 보관 공간을 늘립니다.","landDesc":"매입 후 조립동을 건설할 수 있는 산업용 부지입니다.","terminalDesc":"대량 수입 화물의 하역과 보관에 적합합니다.","supplierDesc":"원자재를 생산해 해원항 시장에 공급합니다.","rivalDesc":"같은 시장에서 자재를 구매하고 완제품을 판매합니다.","est":"거래소 기준","stockUnit":"개","officeId":"HW–01","siteIdPrefix":"HW–","localRoute":"항만 내륙망","mapCoords":"항만 좌표","officeMark":"P","supplierMark":"S","rivalMark":"C","availableMark":"+","selectedMark":"◆","notStarted":"입주 전","note":"거래 메모","taxAmount":"수입 관세","rate":"판매 배율","supply":"공급량","demand":"수요량","dayPrefix":"D","pauseLabel":"정지","finishState":"경영 목표를 모두 달성했습니다.","mobileMenu":"메뉴 열기","bankruptMsg":"운영 종료","rawSpend":"자재 매입","fixed":"고정비","marketing":"판매 현황","productionHelp":"작업은 지시 순서대로 진행됩니다.","arrivalWork":"입고 처리","marketLead":"거래처와 운송 방식을 선택해 실제 도착 원가를 비교하세요.","chipIcon":"IC","ssdIcon":"SSD","pcIcon":"PC","ramIcon":"DDR","boardIcon":"PCB","caseIcon":"AL","welcome":"입주를 시작하세요","noStocks":"보유 중인 재고가 없습니다.","zoom":"지도 배율","pending":"대기","saleMargin":"매출총이익","marketDemand":"전일 구매 수요","full":"창고 부족","mapUnit":"블록","tickerSeparator":"·","minus":"−","plus":"+","goalPosition":"현재 단계","newsTime":"영업일","compactLocale":"ko-KR","sceneCode":"HW / PORT","cashShort":"가용 현금","goalNav":["map","market","production","market","map","finance"],"planning":"운영 계획","repeatTitle":"반복 생산","repeatHelp":"영업일마다 자재와 라인 여유를 확인해 선택한 배치를 한 번 투입합니다.","disabled":"사용 안 함","replenish":"자동 자재 조달","replenishHelp":"보유량과 입고 예정량의 합이 목표보다 낮으면 운임·관세 포함 상한가 안에서 발주합니다.","targetStock":"목표 재고","ceiling":"도착 원가 상한","costPriority":"최저 원가 우선","timePriority":"최단 납기 우선","reference":"기준가","dailyBatch":"일일 배치","autofill":"자동 발주","planOn":"반복 생산 중","pickSite":"지도 시설 선택","shareTitle":"국내 소매 배정","shareLabels":["전량 소매 판매","절반 소매 판매","수출·납품용 보관"],"shareHelp":"남은 물량은 재고로 보관하며 수출하거나 다른 제조사에 납품할 수 있습니다.","contract":"기업 간 납품","buyer":"납품처","contractLimit":"추가 매입 의향","contractUnit":"계약 단가","contractBtn":"납품 계약","contractHelp":"상대 기업의 예상 판매량, 도착 예정 재고, 운영자금에 따라 구매 한도가 달라집니다.","buyback":"공급사에 재판매","buybackHelp":"창고에 남은 원자재를 국내 공급사에 되팔아 공간을 확보합니다.","resaleUnit":"재매입 단가","buybackLimit":"재매입 한도","loading":"수출 하역 대기","readyShip":"선적","retired":"영업 중단","restructure":"재무 구조조정","insolvencyDetail":"지급 불능으로 신규 발주와 생산을 중단했습니다. 기존 재고와 미수금은 정산됩니다.","noBuyer":"구매 가능 수량을 초과했습니다.","unitSpace":"개당 적재 공간","sourceName":"Portside","downloadName":"portside.html","fileName":"PORTSIDE","keyHint":"W A S D","tickerEmpty":"거래소 개장","noDebt":"상환할 차입금이 없습니다.","unitCost":"개당 원가","supplierStatus":"공급 현황","buildReady":"건설 가능","viewMap":"지도 보기","eventsUntil":"종료 예정","warehouseHint":"재고 · 가공 중 제외","dailyDemand":"예상 일일 수요","firmChoice":"기업 선택","navGroups":[["overview","map","market"],["production","design","development","logistics","finance"],["firms","news"]],"groupNames":["워크스페이스","기업 운영","산업 네트워크"],"navEnglish":{"design":"PRODUCT DESIGN","development":"RESEARCH & ORGANIZATION","map":"DISTRICT MAP","market":"COMMODITY EXCHANGE","production":"PRODUCTION CONTROL","logistics":"PORT LOGISTICS","finance":"FINANCIAL LEDGER","firms":"CORPORATE NETWORK","news":"INDUSTRY WIRE"}}
+  "map":{"width":37,"height":26,"center":[14,12],"tile":10,"zoom":[1,1.25,1.6,2],"initialZoom":2,"pan":9,"maxFrame":0.045,"renderScale":2,"roadsX":[5,10,15,20,25,30],"roadsY":[3,8,13,18],"waterX":32,"waterY":22,"seed":1948,"railY":2,"labelLift":2.2},
+  "ui":{"tutorial":"튜토리얼","guideBack":"이전","guideNext":"다음","guideClose":"건너뛰기","guideDone":"완료","guideOpen":"메뉴 열기","guideProgress":"진행 단계","guideFacility":"필요 시설","emptyCatalog":"아직 등록한 제품이 없습니다. 첫 제품을 직접 설계하세요.","designFirst":"첫 제품 설계","paused":"일시정지","treeLocked":"선행 단계 필요","treeReady":"시작 가능","treeHint":"아이콘을 선택하면 프로젝트를 시작할 수 있습니다.","gameSettings":"게임 설정","fullscreen":"전체 화면","exitFullscreen":"전체 화면 닫기","fullUnavailable":"이 화면에서는 전체 화면을 열 수 없습니다.","mapLegendOpen":"시설·지도 도구","startFromRecipe":"설계의 자재 명세를 열고 필요한 수량을 확인하세요.","startProduction":"등록한 제품을 생산 대기열에 넣으세요.","guideMaterials":"최소 배치 투입량","siteMenu":"시설 목록","design":"제품 설계","development":"연구·조직","designName":"제품명","newDesign":"설계 등록","designHelp":"사양을 선택하면 예상 원가와 판매가가 바뀝니다.","family":"카테고리","subtype":"세부 카테고리","tier":"제품 등급","finish":"마감 품질","appliedTech":"적용 기술","targetMargin":"목표 매출총이익률","costRatio":"목표 원가율","designFee":"설계 등록비","workRequired":"필요 공수","designPrice":"목표 판매가","designReady":"등록된 설계","pricingBasis":"가격 설정 기준","pricingValue":"비율 (%)","emptyDesign":"등록한 설계가 없습니다.","sameName":"사용 중인 제품명입니다.","invalidName":"제품명을 입력하세요.","badMargin":"허용 범위 안에서 원가율 또는 마진을 설정하세요.","noTech":"선행 연구를 먼저 완료하세요.","researchTree":"제품 기술","companyTree":"회사 조직","prerequisites":"선행 단계","noRequirements":"바로 시작 가능","startProject":"프로젝트 시작","underway":"진행 중","projectBusy":"진행 중인 프로젝트가 있습니다.","daysRequired":"소요 기간","doneProject":"개발 완료","retailChannel":"유통사","channelFee":"판매 수수료","channelReach":"고객 도달 배율","channelLimit":"일일 판매 한도","listPrice":"현재 판매가","disposed":"당일 메뉴 폐기","released":"출시 완료","alreadyReleased":"이미 개발 중이거나 출시된 타이틀입니다.","digitalInfo":"타이틀마다 한 번 개발합니다. 출시 후 매일 이용권을 판매할 수 있습니다.","retailInfo":"선택한 유통사는 매출에서 수수료를 받고 고객 도달 범위와 일일 판매 한도를 결정합니다.","allocatedCost":"예상 판매량 기준 단위 원가","industry":"업종","techHint":"연구·조직에서 추가 기술을 개발할 수 있습니다.","priceNote":"목표가는 단위 원가 기준입니다. 실제 순수익에는 유통 수수료와 운영비가 반영됩니다.","digitalReference":"개발비 배분 기준 판매량","projectPrice":"프로젝트 예산","serviceHelp":"판매하고 남은 당일 메뉴는 다음 영업 시작 시 폐기됩니다.","menuHold":"예약 납품용 보관","directDispatch":"주문 인도","designSaved":"설계를 등록했습니다.","researchStarted":"프로젝트를 시작했습니다.","techBase":"기본 기술","skuPrefix":"model-","previewCost":"예상 단위 원가","channelNet":"수수료 차감 단가","setupTitle": "회사 설립", "setupEn": "COMPANY REGISTRATION", "setupHint": "회사와 첫 사업 분야를 정하세요.", "companyName": "회사명", "placeholder": "예: 해원산업", "defaultName": "해원산업", "sector": "사업 분야", "funding": "창업 자금", "climate": "초기 경기", "establish": "회사 설립하기", "cancelSetup": "현재 회사로 돌아가기", "setupValidation": "회사명을 입력하세요.", "sitePreview": "창업 예정지", "setupId": "HW / 01", "startRegion": "해원항", "startDistrict": "산업지구", "sectorOverview": "주력 공급망", "startingSite": "첫 사업장", "sectorList": "업종 선택", "previewTitle": "해원항 산업지구", "fundingHint": "자기자본", "namedCompany": "운영 기업", "productGroup": "제조업", "supplyCapacity": "입고량",
+    "title":"PORTSIDE | 항만 기업 경영","kicker":"산업 운영 본부","overview":"운영 현황","map":"산업 지도","market":"상품 거래소","production":"생산 관리","logistics":"물류 센터","finance":"재무 장부","firms":"기업 정보","news":"산업 통신","industry":"산업","network":"네트워크","manage":"경영","system":"시스템","download":"실행본 내려받기","save":"저장","saved":"저장됨","saveFail":"기기 저장 공간을 확인하세요.","reset":"새 회사","resetConfirm":"현재 회사를 지우고 처음부터 시작할까요?","credit":"자금","debt":"차입금","income":"누적 순이익","clock":"운영 시계","pause":"일시정지","play":"시간 진행","next":"하루 진행","day":"일차","dayUnit":"일","units":"개","perday":"개/일","money":"원","man":"만","eok":"억","workUnit":"공수/일","warehouseUnit":"칸","capacity":"작업 능력","dock":"하역 능력","storage":"창고 용량","usedStorage":"점유 공간","zone":"권역","daily":"일일 고정비","cost":"취득 비용","lease":"임대 보증금","site":"시설 정보","owned":"자사 시설","available":"입주 가능","partner":"외부 기업","office":"사무실","factory":"공장","warehouse":"창고","land":"산업 부지","terminal":"터미널","supplier":"공급사","rival":"제조사","leaseBtn":"사무실 임대","buy":"시설 확보","build":"조립동 건설","built":"조립동","chooseSite":"지도에서 시설을 선택하세요.","requiresOffice":"먼저 소형 사무실을 임대하세요.","shortCash":"가용 자금이 부족합니다.","duplicate":"이미 확보한 시설입니다.","intro":"소형 사무실을 임대해 첫 조립 라인을 여세요.","mapSub":"해원항 · 대한민국","live":"운영 중","standby":"대기","mapLegend":"시설 범례","pan":"이동","drag":"드래그","zoomIn":"확대","zoomOut":"축소","center":"본사로 이동","close":"닫기","pulse":"시장 동향","pulseSub":"직전 거래일 대비","item":"품목","price":"시장가","change":"등락률","trend":"가격 추이","allMarket":"거래소 열기","feed":"산업 속보","allNews":"전체 기록","status":"운영 진단","exchangeRate":"원/달러","normal":"안정","events":"경기 상황","mission":"경영 목표","missionSteps":["사무실 임대","첫 자재 조달","첫 제품 조립","첫 제품 판매","생산 거점 확장","누적 이익 달성"],"missionHints":["지도에서 소형 사무실의 임대 조건을 확인하세요.","거래소에서 메모리 칩 10개와 회로 기판 5개를 확보하세요.","자재 입고 후 생산 관리에서 메모리 모듈 5개를 지시하세요.","재고에 판매가를 지정하고 하루를 진행하세요.","산업 지도에서 공장을 확보하거나 부지에 조립동을 건설하세요.","가격과 가동률을 조정해 목표 순이익을 달성하세요."],"complete":"목표 달성","inspect":"시설 보기","go":"열기","rawTab":"원자재 조달","productTab":"완제품 판매","amount":"수량","order":"발주","foreign":"해외","local":"국내","import":"수입","tariff":"관세","freight":"운임","landed":"도착 원가","daysTo":"운송 일수","stock":"가용 재고","outOfStock":"공급사 재고가 부족합니다.","input":"보유 자재","research":"제품 개발","queue":"작업 대기열","make":"생산 지시","missing":"필요한 자재가 부족합니다.","queueFull":"작업 대기열 한도에 도달했습니다.","materials":"자재 명세","conversion":"가공비","noJobs":"대기 중인 작업이 없습니다.","line":"라인 증설","dockUpgrade":"하역장 확장","max":"증설 한도에 도달했습니다.","capacityNeed":"공장 또는 조립동이 필요합니다.","needsLand":"먼저 산업 부지를 확보하세요.","locked":"제품 개발이 필요합니다.","invalid":"거래 조건을 다시 확인하세요.","cashflow":"현금 흐름","borrow":"운영자금 대출","repay":"원금 상환","limit":"대출 한도","interest":"연 이율","ledger":"거래 내역","balance":"현금 잔액","amountMoney":"금액","noHistory":"거래가 없습니다.","date":"영업일","description":"항목","sale":"국내 판매","export":"수출","exportBtn":"수출 선적","exportEmpty":"수출할 완제품이 부족합니다.","pricePolicy":"국내 판매가","priceHelp":"판매 배율은 기본 품목의 시장가와 자체 설계 품목의 목표가에 적용됩니다. 판매 대금은 매일 정산됩니다.","margin":"예상 단위 마진","costBasis":"평균 원가","inTransit":"운송 중","shipment":"화물 명세","arrival":"도착 예정","backlog":"하역 대기","noCargo":"운송 중인 화물이 없습니다.","finished":"완제품 재고","reason":"최근 판단","quality":"품질 지수","cash":"보유 현금","activeProduct":"주력 품목","capacityShort":"생산 능력","firmIntro":"업체별 조달과 재고, 판매가가 매일 시장에서 경쟁합니다.","initialReason":"초기 거래망 확보","supplyReason":"재고와 자금에 맞춰 출하","switchReason":"예상 마진·경쟁 강도에 따라 주력 품목 변경","investReason":"가동률 상승에 대응해 조립 라인 증설","launchReason":"개발비 집행 후 신규 제품 출시","waitReason":"운영자금 보전을 위해 발주 축소","orderReason":"판매 속도와 납기 기준으로 안전재고 확보","reduceReason":"재고 누적으로 생산 감축","initialNews":"해원항 거래소 개장","initialDetail":"소재 공급사와 제조사가 거래를 시작했습니다.","typeMarket":"시장","typeCompany":"기업","typeOps":"운영","leased":"사무실 임대 계약","acquired":"시설 매입","builtNews":"조립동 준공","purchased":"자재 발주","delivered":"화물 입고","manufactured":"제품 조립 완료","upgrade":"설비 투자","expenses":"임차료·설비 유지비","interestPaid":"차입 이자","insolvent":"지급 불능","failedHelp":"현금과 남은 신용 한도로 운영비를 충당할 수 없습니다.","autoLoan":"긴급 운영자금 차입","shipped":"수출 대금 회수","sold":"국내 판매 정산","marketRecovery":"시장 충격 종료","route":"운송 경로","working":"작업 진행","spaceBlock":"창고 포화","inputBlock":"자재 부족","idle":"생산 대기","loaded":"생산 진행","portBlock":"하역 적체","daysLeft":"잔여 일수","unitPrice":"자재 단가","total":"발주 총액","priceIndex":"시장 가격 지수","priceIndexHelp":"원자재·완제품 기준가 평균","volume":"전일 판매","business":"영업 현황","emptyFeed":"기록이 없습니다.","journal":"산업 일지","filterAll":"전체","assets":"운영 자산","facilityCount":"보유 시설","speed":"진행 속도","costHelp":"자재와 가공비는 생산 지시 시 투입합니다.","spaceHelp":"입고 대기 화물은 다음 영업일에 다시 하역합니다.","storageBusy":"창고에 완제품을 보관할 공간이 부족합니다.","exportPrice":"수출 단가","exportHelp":"해외 수요 한도 내에서 선적하고 운송 완료 시 대금을 회수합니다.","exportLimit":"해외 잔여 수요","creditHelp":"운영비 결제 시 잔여 신용 한도에서 자동 차입합니다.","target":"목표 순이익","ready":"개발 완료","sku":"생산 품목","progress":"잔여 작업","firmLink":"기업 장부 보기","lineCount":"라인 증설 횟수","dockCount":"하역장 확장 횟수","logisticsHelp":"발주처의 거리·운송 방식과 보유 시설의 일일 하역 한도가 입고일을 결정합니다.","mapTitle":"해원항 산업 지도","ticker":"원자재 시세","workspace":"운영 콘솔","overviewEn":"OPERATIONS OVERVIEW","dayTag":"DAY","mapTag":"DISTRICT MAP","marketTag":"MARKET WATCH","feedTag":"INDUSTRY WIRE","inspectorTag":"PROPERTY","goalTag":"MILESTONE","mapCode":"HW · 01","regionEn":"HAEWON INDUSTRIAL PORT","systemOnline":"시스템 연결됨","overviewHint":"산업 지도와 거래 현황","companyTag":"PORTSIDE INDUSTRIES","landUse":"시설 용도","selected":"선택","marketSummary":"시장 지수","notTrading":"거래 대기","downloadFail":"실행본을 생성할 수 없습니다. HTTP 서버에서 다시 시도하세요.","currency":"₩","exportRoute":"해원항 → 해외 바이어","source":"출발지","profitHelp":"판매원가와 일일 운영비를 반영합니다.","navigation":"메뉴","more":"자세히","holding":"보유량","queueAhead":"예상 입고","goalTip":"단계별 경영 과제","officeDesc":"소규모 전자제품 조립과 국내외 자재 거래를 시작할 수 있습니다.","factoryDesc":"조립 라인과 자재 보관 공간을 갖춘 생산 시설입니다.","warehouseDesc":"입고 처리량과 재고 보관 공간을 늘립니다.","landDesc":"매입 후 조립동을 건설할 수 있는 산업용 부지입니다.","terminalDesc":"대량 수입 화물의 하역과 보관에 적합합니다.","supplierDesc":"원자재를 생산해 해원항 시장에 공급합니다.","rivalDesc":"같은 시장에서 자재를 구매하고 완제품을 판매합니다.","est":"거래소 기준","stockUnit":"개","officeId":"HW–01","siteIdPrefix":"HW–","localRoute":"항만 내륙망","mapCoords":"항만 좌표","officeMark":"P","supplierMark":"S","rivalMark":"C","availableMark":"+","selectedMark":"◆","notStarted":"입주 전","note":"거래 메모","taxAmount":"수입 관세","rate":"판매 배율","supply":"공급량","demand":"수요량","dayPrefix":"D","pauseLabel":"정지","finishState":"경영 목표를 모두 달성했습니다.","mobileMenu":"메뉴 열기","bankruptMsg":"운영 종료","rawSpend":"자재 매입","fixed":"고정비","marketing":"판매 현황","productionHelp":"작업은 지시 순서대로 진행됩니다.","arrivalWork":"입고 처리","marketLead":"거래처와 운송 방식을 선택해 실제 도착 원가를 비교하세요.","chipIcon":"IC","ssdIcon":"SSD","pcIcon":"PC","ramIcon":"DDR","boardIcon":"PCB","caseIcon":"AL","welcome":"입주를 시작하세요","noStocks":"보유 중인 재고가 없습니다.","zoom":"지도 배율","pending":"대기","saleMargin":"매출총이익","marketDemand":"전일 구매 수요","full":"창고 부족","mapUnit":"블록","tickerSeparator":"·","minus":"−","plus":"+","goalPosition":"현재 단계","newsTime":"영업일","compactLocale":"ko-KR","sceneCode":"HW / PORT","cashShort":"가용 현금","goalNav":["map","market","production","market","map","finance"],"planning":"운영 계획","repeatTitle":"반복 생산","repeatHelp":"영업일마다 자재와 라인 여유를 확인해 선택한 배치를 한 번 투입합니다.","disabled":"사용 안 함","replenish":"자동 자재 조달","replenishHelp":"보유량과 입고 예정량의 합이 목표보다 낮으면 운임·관세 포함 상한가 안에서 발주합니다.","targetStock":"목표 재고","ceiling":"도착 원가 상한","costPriority":"최저 원가 우선","timePriority":"최단 납기 우선","reference":"기준가","dailyBatch":"일일 배치","autofill":"자동 발주","planOn":"반복 생산 중","pickSite":"지도 시설 선택","shareTitle":"국내 소매 배정","shareLabels":["전량 소매 판매","절반 소매 판매","수출·납품용 보관"],"shareHelp":"남은 물량은 재고로 보관하며 수출하거나 다른 제조사에 납품할 수 있습니다.","contract":"기업 간 납품","buyer":"납품처","contractLimit":"추가 매입 의향","contractUnit":"계약 단가","contractBtn":"납품 계약","contractHelp":"상대 기업의 예상 판매량, 도착 예정 재고, 운영자금에 따라 구매 한도가 달라집니다.","buyback":"공급사에 재판매","buybackHelp":"창고에 남은 원자재를 국내 공급사에 되팔아 공간을 확보합니다.","resaleUnit":"재매입 단가","buybackLimit":"재매입 한도","loading":"수출 하역 대기","readyShip":"선적","retired":"영업 중단","restructure":"재무 구조조정","insolvencyDetail":"지급 불능으로 신규 발주와 생산을 중단했습니다. 기존 재고와 미수금은 정산됩니다.","noBuyer":"구매 가능 수량을 초과했습니다.","unitSpace":"개당 적재 공간","sourceName":"Portside","downloadName":"portside.html","fileName":"PORTSIDE","keyHint":"W A S D","tickerEmpty":"거래소 개장","noDebt":"상환할 차입금이 없습니다.","unitCost":"개당 원가","supplierStatus":"공급 현황","buildReady":"건설 가능","viewMap":"지도 보기","eventsUntil":"종료 예정","warehouseHint":"재고 · 가공 중 제외","dailyDemand":"예상 일일 수요","firmChoice":"기업 선택","navGroups":[["overview","market","design","production","logistics"],["development","finance","firms","news"]],"groupNames":["워크스페이스","기업 운영","산업 네트워크"],"navEnglish":{"design":"PRODUCT DESIGN","development":"RESEARCH & ORGANIZATION","map":"DISTRICT MAP","market":"COMMODITY EXCHANGE","production":"PRODUCTION CONTROL","logistics":"PORT LOGISTICS","finance":"FINANCIAL LEDGER","firms":"CORPORATE NETWORK","news":"INDUSTRY WIRE"}}
 };

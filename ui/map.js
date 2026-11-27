@@ -3,7 +3,7 @@ const Harbor = (() => {
   const m=DB.map, t=m.tile, h=t/2, scale=m.renderScale;
   const iso=(x,y,z=0)=>[(x-y)*t,(x+y)*h-z];
   const noise=(x,y,n=0)=>{const a=Math.sin(x*127.1+y*311.7+n*74.7+m.seed)*43758.5453;return a-Math.floor(a);};
-  let ctx, origin=[0,0], atlas, atlasSector, atlasOffset, canvas, state, pick, hot=[], frame, last=0;
+  let ctx, origin=[0,0], atlas, atlasSector, atlasOffset, canvas, state, pick, hover, hovered, hot=[], frame, last=0;
   let center=m.center.slice(), zi=m.initialZoom, drag=null;
   const keys=new Set();
   function poly(color,pts) {
@@ -165,8 +165,10 @@ const Harbor = (() => {
       box(x,y+.2,.55,.27,0,1.8,i%2?brick:white);
     }
     hot=[];
+    const {s,id,hint}=state();
     for(const a of DB.sites) {
-      const active=state().id===a.id, owned=state().s.player.sites.includes(a.id), ownColor='#9fd5a8',openColor='#f4c36c';
+      const active=id===a.id||hovered===a.id||hint===a.id;
+      const owned=s.player.sites.includes(a.id),ownColor='#9fd5a8',openColor='#f5a759';
       const color=owned?ownColor:a.firm?'#afc8d5':openColor;
       if(active) {
         const pts=[[a.x-1.65,a.y-1.45],[a.x+1.65,a.y-1.45],[a.x+1.65,a.y+1.5],[a.x-1.65,a.y+1.5]].map(p=>iso(...p));
@@ -181,30 +183,64 @@ const Harbor = (() => {
     }
     frame=requestAnimationFrame(draw);
   }
-  function move(x,y){center=[clamp(center[0]+x+y,0,m.width-1),clamp(center[1]-x+y,0,m.height-1)];}
-  function mount(el,read,onPick){
-    stop(); canvas=el;state=read;pick=onPick;if(!atlas || atlasSector!==DB.sector){atlasSector=DB.sector;makeAtlas();}
-    canvas.onpointerdown=e=>{canvas.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY};};
-    canvas.onpointermove=e=>{if(!drag)return;move((drag.x-e.clientX)/(2*t*scale*m.zoom[zi]),(drag.y-e.clientY)/(2*h*scale*m.zoom[zi]));drag.x=e.clientX;drag.y=e.clientY;};
-    canvas.onpointerup=e=>{
-      if(drag && Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)<5){
-        const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*canvas.width/r.width,y=(e.clientY-r.top)*canvas.height/r.height;
-        const hits=hot.filter(p=>Math.abs(x-p.x)<17*p.zoom && y>=p.y-8*p.zoom && y<=p.base+8*p.zoom);
-        hits.sort((a,b)=>Math.hypot(a.x-x,(a.y+a.base)/2-y)-Math.hypot(b.x-x,(b.y+b.base)/2-y)); if(hits[0])pick(hits[0].id);
-      } drag=null;
+  function move(x,y){clearHover();center=[clamp(center[0]+x+y,0,m.width-1),clamp(center[1]-x+y,0,m.height-1)];}
+  function hitAt(point) {
+    const rect=canvas.getBoundingClientRect();
+    const x=(point.clientX-rect.left)*canvas.width/rect.width;
+    const y=(point.clientY-rect.top)*canvas.height/rect.height;
+    const hits=hot.filter(p=>Math.abs(x-p.x)<17*p.zoom && y>=p.y-8*p.zoom && y<=p.base+8*p.zoom);
+    const distance=p=>Math.hypot(p.x-x,(p.y+p.base)/2-y);
+    return hits.sort((a,b)=>distance(a)-distance(b))[0]?.id;
+  }
+  function clearHover() {
+    if(!hovered) return;
+    hovered=null;hover?.(null);
+    if(canvas) canvas.classList.remove('map-hit');
+  }
+  function mount(el,read,onPick,onHover) {
+    stop();canvas=el;state=read;pick=onPick;hover=onHover;
+    if(!atlas || atlasSector!==DB.sector){atlasSector=DB.sector;makeAtlas();}
+    canvas.onpointerdown=e=>{
+      clearHover();canvas.setPointerCapture(e.pointerId);
+      drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY};
     };
-    canvas.onpointercancel=()=>{drag=null;};
+    canvas.onpointermove=e=>{
+      if(!drag){
+        if(!hover || e.pointerType==='touch') return;
+        const id=hitAt(e);
+        if(!id){clearHover();return;}
+        hovered=id;canvas.classList.add('map-hit');
+        hover(id,{x:e.clientX,y:e.clientY});
+        return;
+      }
+      move((drag.x-e.clientX)/(2*t*scale*m.zoom[zi]),(drag.y-e.clientY)/(2*h*scale*m.zoom[zi]));
+      drag.x=e.clientX;drag.y=e.clientY;
+    };
+    canvas.onpointerup=e=>{
+      const id=drag && Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)<5 && hitAt(e);
+      drag=null;
+      if(id) pick(id);
+    };
+    canvas.onpointercancel=()=>{drag=null;clearHover();};
+    canvas.onpointerleave=clearHover;
     canvas.onwheel=e=>{e.preventDefault();zoom(Math.sign(-e.deltaY));};
     frame=requestAnimationFrame(draw);
   }
-  function zoom(delta){zi=clamp(zi+delta,0,m.zoom.length-1);}
-  function focus(id){const a=site(id);center=[a.x,a.y];}
-  function stop(){cancelAnimationFrame(frame);keys.clear();drag=null;canvas=null;}
+  function zoom(delta){clearHover();zi=clamp(zi+delta,0,m.zoom.length-1);}
+  function focus(id){clearHover();const a=site(id);center=[a.x,a.y];}
+  function stop(){clearHover();cancelAnimationFrame(frame);keys.clear();drag=null;canvas=null;}
   function preview(el,a){
     const prev=ctx,old=origin;el.width=114;el.height=56;ctx=el.getContext('2d');origin=[57,38];
     plane(-2,-1.65,4,3.3,0,'#718b79');plane(-1.8,-1.45,3.6,2.9,0,'#9ba797');building(0,0,a.type,DB.sites.indexOf(a));ctx=prev;origin=old;
   }
-  window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(canvas && !e.ctrlKey&&!e.metaKey&&!e.altKey && !['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)&&['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){keys.add(k);e.preventDefault();}});
+  window.addEventListener('keydown',e=>{
+    const k=e.key.toLowerCase();
+    if(!canvas || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input,select,textarea,[contenteditable]')) return;
+    const directional=['arrowup','arrowdown','arrowleft','arrowright'].includes(k);
+    if(['w','a','s','d'].includes(k) || (directional && (e.target===canvas || e.target===document.body))){
+      keys.add(k);e.preventDefault();
+    }
+  });
   window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
   window.addEventListener('blur',()=>keys.clear());
   return {mount,stop,focus,zoom,preview};

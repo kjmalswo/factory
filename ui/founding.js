@@ -1,5 +1,5 @@
 'use strict';
-const brandIcon='<svg class="brand-icon" aria-hidden="true" viewBox="0 0 36 36" shape-rendering="crispEdges"><rect width="36" height="36" rx="7" fill="#e9b863"/><path fill="#27322d" d="M6 26V15l7 3v-6l8 5V8h4v3h2v15z"/><path fill="#e9b863" d="M9 21h3v2H9zm6 0h3v2h-3zm6 0h3v2h-3z"/></svg>';
+const brandIcon='<svg class="brand-icon" aria-hidden="true" viewBox="0 0 36 36" shape-rendering="crispEdges"><rect width="36" height="36" rx="7" fill="var(--gold)"/><path fill="#27322d" d="M6 26V15l7 3v-6l8 5V8h4v3h2v15z"/><path fill="var(--gold)" d="M9 21h3v2H9zm6 0h3v2h-3zm6 0h3v2h-3z"/></svg>';
 function sectorSprite(key){
   const parts={
     car:[['#384844','M2 16h5l5-7h12l5 7h5v8H2z'],['#d1ae70','M3 16h6l5-6h9l5 6h4v5H3z'],['#719492','M12 15l3-4h7l3 4z'],['#212b28','M6 20h6v6H6zm18 0h6v6h-6z']],

@@ -1,5 +1,11 @@
 'use strict';
 const paths={
+ design:'M4 20h16 M5 16l2-5L17 2l4 4-10 10-6 1z M14 5l4 4',
+ development:'M9 3h6 M10 3v7L4 19q-1 2 2 2h12q3 0 2-2l-6-9V3 M8 15h8',
+ settings:'M4 6h16 M4 12h16 M4 18h16 M8 4v4 M15 10v4 M10 16v4',
+ help:'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0 M9 9a3 3 0 1 1 4 3c-1 1-1 1-1 2 M12 17h.01',
+ close:'M6 6l12 12 M18 6L6 18',
+ screen:'M9 3H3v6 M15 3h6v6 M9 21H3v-6 M15 21h6v-6',
  overview:'M3 3h7v7H3z M14 3h7v4h-7z M3 14h7v7H3z M14 11h7v10h-7z',
  map:'M3 5l6-2 6 3 6-3v16l-6 3-6-3-6 2z M9 3v16 M15 6v16',
  market:'M3 18V6 M3 18h18 M6 14l4-5 4 3 6-7 M16 5h4v4',
@@ -73,11 +79,6 @@ function itemLogo(k) {
 function marketTable(keys,link=true) {
   return '<div class="table-wrap"><table><thead><tr>'+[T.item,T.price,T.change,T.trend].map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+keys.map(k=>'<tr><td>'+(link?btn('good',itemLogo(k)+esc(DB.goods[k].name),'item-link','data-id="'+k+'"'):esc(DB.goods[k].name))+'</td><td>'+won(marketPrice(S,k))+'</td><td>'+delta(k)+'</td><td>'+spark(k)+'</td></tr>').join('')+'</tbody></table></div>';
 }
-function mapPanel() {
-  return '<section class="panel map-panel">'+head(T.mapTitle,T.mapTag,'<span class="map-region">'+icon('pin',14)+T.mapSub+'</span>')+
-  '<div class="map-viewport"><canvas id="map-canvas" tabindex="0" aria-label="'+T.mapTitle+'"></canvas><div class="map-stamp"><i></i>'+T.sceneCode+'</div><div class="map-tools">'+ib('zoomIn','plus',T.zoomIn)+ib('zoomOut','minus',T.zoomOut)+ib('focus','focus',T.center)+'</div></div>'+
-  '<div class="map-foot"><div class="legend"><span><i class="gold"></i>'+T.available+'</span><span><i class="mint"></i>'+T.owned+'</span><span><i class="blue"></i>'+T.partner+'</span></div><span class="key-hint"><kbd>'+T.keyHint+'</kbd> '+T.pan+' / '+T.drag+'</span></div></section>';
-}
 function inspector() {
   const a=site(U.site), p=S.player, owned=p.sites.includes(a.id),constructed=a.id==='plot' && p.built;
   const badge=a.firm?T.partner:owned?T.owned:T.available,cl=a.firm?'blue':owned?'green':'amber';
@@ -87,24 +88,28 @@ function inspector() {
   else if(!owned) action=btn('acquire',(a.id==='office'?T.leaseBtn:T.buy)+icon('arrow',16),'wide primary','data-id="'+a.id+'"');
   else if(a.id==='plot'&&!constructed) action=btn('build',T.build+' · '+won(DB.build.price),'wide primary');
   else action=navbtn(a.type==='warehouse'||a.type==='terminal'?'logistics':'production',T.go+icon('arrow',15),'wide subtle');
-  return '<section class="panel inspector">'+head(T.site,T.inspectorTag,icon('layers',19))+'<div class="preview-grid"><span class="plot-id">'+T.siteIdPrefix+String(DB.sites.indexOf(a)+1).padStart(2,'0')+'</span><canvas id="preview"></canvas>'+tag(badge,cl)+'</div><div class="inspect-body"><label class="facility-select"><select data-field="site" aria-label="'+T.pickSite+'">'+options(DB.sites.map(a=>a.id),a.id,id=>site(id).name)+'</select></label><h3 class="sr-only">'+a.name+'</h3><p class="location">'+icon('pin',13)+a.zone+'</p><p>'+T[a.type+'Desc']+'</p>'+
+  return '<section class="panel inspector">'+'<div class="preview-grid"><span class="plot-id">'+T.siteIdPrefix+String(DB.sites.indexOf(a)+1).padStart(2,'0')+'</span><canvas id="preview"></canvas>'+tag(badge,cl)+'</div><div class="inspect-body"><label class="facility-select"><select data-field="site" aria-label="'+T.pickSite+'">'+options(DB.sites.map(a=>a.id),a.id,id=>site(id).name)+'</select></label><h3 class="sr-only">'+a.name+'</h3><p class="location">'+icon('pin',13)+a.zone+'</p><p>'+T[a.type+'Desc']+'</p>'+
   (a.firm?row(T.activeProduct,DB.goods[S.firms[a.firm].product].name):row(a.id==='office'?T.lease:T.cost,won(a.price))+row(T.daily,won(data.daily))+row(T.capacity,fmt(data.work)+' '+T.workUnit)+row(T.storage,fmt(data.storage)+' '+T.warehouseUnit))+action+'</div></section>';
 }
 function mission() {
   const n=S.player.milestones.findIndex(x=>!x), max=T.missionSteps.length;
   return '<section class="panel mission">'+head(T.mission,T.goalTag,'<span class="counter">'+String(n<0?max:n+1).padStart(2,'0')+' / '+String(max).padStart(2,'0')+'</span>')+
-    '<div class="mission-body"><div class="steps">'+S.player.milestones.map((v,i)=>'<i class="'+(v?'done':i===n?'current':'')+'"></i>').join('')+'</div><h3>'+icon('goal',18)+(n<0?T.complete:T.missionSteps[n])+'</h3><p>'+(n<0?T.finishState:T.missionHints[n])+'</p>'+(n<0?'':btn('goal',T.go+icon('arrow',14),'text-link'))+'</div></section>';
+    '<div class="mission-body"><div class="steps">'+S.player.milestones.map((v,i)=>'<i class="'+(v?'done':i===n?'current':'')+'"></i>').join('')+'</div><h3>'+icon('goal',18)+(n<0?T.complete:T.missionSteps[n])+'</h3><p>'+(n<0?T.finishState:n===1?T.startFromRecipe:n===2?T.startProduction:T.missionHints[n])+'</p>'+(n<0?'':btn('goal',T.go+icon('arrow',14),'text-link'))+'</div></section>';
 }
 function feed(limit) {
   return S.news.slice(0,limit).map(n=>'<article class="news-entry"><span class="wire-dot '+n.type+'"></span><div><div class="news-meta">'+T[n.type]+' <b>·</b> '+T.dayTag+' '+String(n.day).padStart(3,'0')+'</div><strong>'+esc(n.title)+'</strong>'+(n.detail?'<p>'+esc(n.detail)+'</p>':'')+'</div></article>').join('');
 }
 function overview() {
-  return '<div class="dashboard"><div class="main-col">'+mapPanel()+'<section class="panel">'+head(T.pulse,T.marketTag,navbtn('market',T.allMarket+icon('arrow',14),'text-link'))+marketTable([...DB.raw,DB.products[0]])+'</section></div><aside class="right-col">'+inspector()+mission()+'</aside></div><section class="panel feed">'+head(T.feed,T.feedTag,navbtn('news',T.allNews+icon('arrow',14),'text-link'))+feed(3)+'</section>';
+  return '<div class="two-col"><div>'+mission()+'</div><section class="panel">'+head(T.pulse,T.marketTag,navbtn('market',T.allMarket+icon('arrow',14),'text-link'))+marketTable(DB.raw)+'</section></div><section class="panel feed">'+head(T.feed,T.feedTag,navbtn('news',T.allNews+icon('arrow',14),'text-link'))+feed(3)+'</section>';
+}
+function emptyCatalog() {
+  return panel(T.designFirst,empty(T.emptyCatalog)+navbtn('design',T.newDesign+icon('arrow',16),'primary wide'));
 }
 function marketView() {
   const raw=U.tab==='raw',k=raw?U.raw:U.product, p=S.player;
   const tabs='<div class="tabs">'+['raw','products'].map((v,i)=>btn('marketTab',[T.rawTab,T.productTab][i],v===U.tab?'active':'','data-id="'+v+'"')).join('')+'</div>';
-  const goods=(raw?DB.raw:productKeys()).map(i=>btn('good',itemLogo(i)+'<span>'+esc(DB.goods[i].name)+'</span><strong>'+won(marketPrice(S,i))+'</strong>'+delta(i),i===k?'good active':'good','data-id="'+i+'"')).join('');
+  if(!raw && !k) return tabs+emptyCatalog();
+  const goods=(raw?DB.raw:p.catalog).map(i=>btn('good',itemLogo(i)+'<span>'+esc(DB.goods[i].name)+'</span><strong>'+won(marketPrice(S,i))+'</strong>'+delta(i),i===k?'good active':'good','data-id="'+i+'"')).join('');
   let form;
   if(raw) {
     const q=quote(S,k,U.route,U.qty);
@@ -117,14 +122,15 @@ function marketView() {
     if(DB.sector.mode==='service') form+='<p>'+T.serviceHelp+'</p>';
     else form+=select('retailShare',T.shareTitle,options(DB.operations.retailShares,p.retailShare?.[k]??1,v=>T.shareLabels[DB.operations.retailShares.indexOf(v)]))+'<p>'+T.shareHelp+'</p><hr>'+row(T.exportPrice,won(exportQuote(S,k)))+row(T.exportLimit,pcs(can))+select('exportQty',T.amount,qtyOptions(DB.trade.lots,U.exportQty))+btn('export',T.exportBtn+icon('arrow',16),'primary wide')+'<p>'+T.exportHelp+'</p>';
   }
-  const peer=contractQuote(S,U.product,U.buyer),back=buybackQuote(S,U.raw);
+  const peer=raw?null:contractQuote(S,k,U.buyer),back=raw?buybackQuote(S,k):null;
   const wholesale=raw?panel(T.buyback,'<p>'+T.buybackHelp+'</p>'+row(T.resaleUnit,won(back.unit))+row(T.buybackLimit,pcs(back.limit))+select('resaleQty',T.amount,qtyOptions(DB.trade.lots,U.resaleQty))+btn('resell',T.buyback,'wide subtle')):panel(T.contract,'<p>'+T.contractHelp+'</p>'+select('buyer',T.buyer,options(DB.ai.firms.filter(d=>!d.raw).map(d=>d.id),U.buyer,firmName))+row(T.contractUnit,won(peer.unit))+row(T.contractLimit,pcs(peer.limit))+select('contractQty',T.amount,qtyOptions(DB.operations.batch,U.contractQty))+btn('contract',T.contractBtn,'wide subtle'));
   return tabs+'<div class="two-col"><div>'+panel(raw?T.rawTab:T.productTab,'<p>'+ (raw?T.marketLead:T.priceHelp)+'</p><div class="goods-list">'+goods+'</div>'+row(T.holding,pcs(p.stock[k]))+row(T.unitSpace,unitSpace(k)+' '+T.warehouseUnit)+row(T.marketDemand,pcs(S.market[familyOf(k)].demand))+row(T.exchangeRate,fmt(S.fx)))+(raw||DB.sector.mode!=='service'?wholesale:'')+'</div>'+panel(esc(DB.goods[k].name),form)+'</div>';
 }
 function productionView() {
   const p=S.player, k=U.sku, g=DB.goods[k], cap=facility(S);
-  const recipes=productKeys().map(i=>btn('sku',itemLogo(i)+'<span>'+esc(DB.goods[i].name)+'</span>'+tag(p.unlocked.includes(i)?T.ready:T.research,p.unlocked.includes(i)?'green':''),i===k?'good active':'good','data-id="'+i+'"')).join('');
-  const form=(S.designs?.[k]?designSummary(S.designs[k]):'')+entries(g.bom).map(([i,n])=>row(esc(DB.goods[i].name),fmt(n)+' / '+pcs(p.stock[i]))).join('')+row(T.conversion,won(g.conversion))+row(T.unitCost,won(recipeCost(S,k)))+select('batch',T.amount,qtyOptions(DB.operations.batch,U.batch))+(p.releases?.[k]?tag(T.released,'green'):p.unlocked.includes(k)?btn('make',T.make+icon('arrow',16),'wide primary'):btn('research',T.research+' · '+won(g.research),'wide primary'));
+  if(!g) return emptyCatalog();
+  const recipes=p.catalog.map(i=>btn('sku',itemLogo(i)+'<span>'+esc(DB.goods[i].name)+'</span>'+tag(p.unlocked.includes(i)?T.ready:T.research,p.unlocked.includes(i)?'green':''),i===k?'good active':'good','data-id="'+i+'"')).join('');
+  const form=(S.designs?.[k]?designSummary(S.designs[k]):'')+entries(g.bom).map(([i,n])=>row(esc(DB.goods[i].name),fmt(n)+' / '+pcs(p.stock[i]))).join('')+row(T.conversion,won(g.conversion))+row(T.unitCost,won(recipeCost(S,k)))+select('batch',T.amount,qtyOptions(DB.operations.batch,U.batch))+(p.releases?.[k]?tag(T.released,'green'):btn('make',T.make+icon('arrow',16),'wide primary'));
   const repeat=select('repeat',T.dailyBatch,options([0,...DB.operations.batch],p.plans?.[k]||0,n=>n?pcs(n):T.disabled));
   return '<div class="two-col">'+panel(T.sku,navbtn('design',T.newDesign,'subtle')+'<div class="goods-list">'+recipes+'</div>'+row(T.capacity,fmt(cap.work)+' '+T.workUnit)+row(T.status,T[bottleneck(S)])+btn('lines',T.line+' · '+won(DB.operations.lineCost),'wide subtle'))+panel(esc(g.name),'<p>'+(DB.sector.mode==='digital'?T.digitalInfo:T.costHelp)+'</p>'+form)+'</div>'+(DB.sector.mode==='digital'?'':panel(T.repeatTitle,'<p>'+T.repeatHelp+'</p>'+repeat))+panel(T.queue,p.jobs.length?p.jobs.map(j=>row(esc(DB.goods[j.k].name),pcs(j.qty)+' · '+T.progress+' '+(j.qty*DB.goods[j.k].work-j.progress).toFixed(1))).join(''):empty(T.noJobs));
 }
@@ -132,7 +138,7 @@ function logisticsView() {
   const p=S.player,cap=facility(S),cargo=S.cargos.filter(c=>c.owner==='player'),rule=p.reorder?.[U.material]||{};
   const orders=select('material',T.item,options(DB.raw,U.material,k=>esc(DB.goods[k].name)))+select('target',T.targetStock,options(DB.planning.targets,rule.target||0,v=>v?pcs(v):T.disabled))+select('ceiling',T.ceiling,options(DB.planning.ceilings,rule.ceiling||DB.planning.initialCeiling,v=>won(v*DB.goods[U.material].base)))+select('priority',T.route,options(DB.planning.routes,rule.priority||DB.planning.routes[0],v=>v==='cost'?T.costPriority:T.timePriority));
 
-  return '<div class="two-col">'+panel(T.arrivalWork,'<p>'+T.logisticsHelp+'</p>'+row(T.dock,fmt(cap.dock)+' '+T.perday)+row(T.usedStorage,fmt(occupied(S,p))+' / '+fmt(cap.storage))+row(T.status,T[bottleneck(S)])+btn('docks',T.dockUpgrade+' · '+won(DB.operations.dockCost),'wide subtle'))+panel(T.stock,entries(p.stock).map(([i,n])=>row(esc(DB.goods[i].name),pcs(n))).join(''))+'</div>'+panel(T.replenish,'<p>'+T.replenishHelp+'</p>'+orders)+panel(T.shipment,'<p>'+T.spaceHelp+'</p>'+(cargo.length?cargo.map(c=>row(esc(DB.goods[c.k].short)+' · '+(c.route==='export'?T.export:c.route==='loading'?T.loading:DB.trade.routes[c.route].name),pcs(c.qty)+' · '+(c.due<=S.day?T.backlog:T.dayPrefix+c.due))).join(''):empty(T.noCargo)));
+  return '<div class="two-col">'+panel(T.arrivalWork,'<p>'+T.logisticsHelp+'</p>'+row(T.dock,fmt(cap.dock)+' '+T.perday)+row(T.usedStorage,fmt(occupied(S,p))+' / '+fmt(cap.storage))+row(T.status,T[bottleneck(S)])+btn('docks',T.dockUpgrade+' · '+won(DB.operations.dockCost),'wide subtle'))+panel(T.stock,[...DB.raw,...p.catalog].map(i=>[i,p.stock[i]]).map(([i,n])=>row(esc(DB.goods[i].name),pcs(n))).join(''))+'</div>'+panel(T.replenish,'<p>'+T.replenishHelp+'</p>'+orders)+panel(T.shipment,'<p>'+T.spaceHelp+'</p>'+(cargo.length?cargo.map(c=>row(esc(DB.goods[c.k].short)+' · '+(c.route==='export'?T.export:c.route==='loading'?T.loading:DB.trade.routes[c.route].name),pcs(c.qty)+' · '+(c.due<=S.day?T.backlog:T.dayPrefix+c.due))).join(''):empty(T.noCargo)));
 }
 function financeView() {
   const p=S.player,b=DB.finance;

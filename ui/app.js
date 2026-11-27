@@ -10,7 +10,7 @@ function restore(){
   return null;
 }
 let S=restore(), timer=null, toastTimer=null, founding=!S, draft=foundingDefaults();
-const U={page:'overview',site:'office',material:DB.raw[0],buyer:DB.ai.firms.find(d=>!d.raw).id,contractQty:DB.operations.batch[0],resaleQty:DB.trade.lots[0],raw:DB.raw[0],product:DB.products[0],sku:DB.products[0],tab:'raw',route:'road',qty:DB.trade.lots[0],batch:DB.operations.batch[0],exportQty:DB.trade.lots[0],firm:DB.ai.firms[0].id,speed:0,menu:false};
+const U={page:null,site:'office',material:DB.raw[0],buyer:DB.ai.firms.find(d=>!d.raw).id,contractQty:DB.operations.batch[0],resaleQty:DB.trade.lots[0],raw:DB.raw[0],product:S?.player.catalog[0],sku:S?.player.catalog[0],tab:'raw',route:'road',qty:DB.trade.lots[0],batch:DB.operations.batch[0],exportQty:DB.trade.lots[0],firm:DB.ai.firms[0].id,speed:0};
 const root=document.getElementById('app');
 document.title=T.title;
 function notice(msg) {
@@ -30,49 +30,53 @@ function runClock(){
   requireOffice(S);if(S.over)fail('insolvent');
   timer=setInterval(tick,DB.calendar.speeds[U.speed]);
 }
-const nav=(id)=>{if(id==='design')stopClock();U.page=id;U.menu=false;window.scrollTo(0,0);};
-function sidebar() {
-  const logo=brandIcon;
-  return '<aside class="sidebar '+(U.menu?'opened':'')+'"><div class="brand">'+logo+'<div><strong>'+DB.brand+'</strong><small>'+T.kicker+'</small></div></div><nav aria-label="'+T.navigation+'">'+T.navGroups.map((group,i)=>'<div class="nav-group"><div class="nav-label">'+T.groupNames[i]+'</div>'+group.map(id=>navbtn(id,icon(id)+'<span>'+T[id]+'</span>'+(id===U.page?'<i></i>':''),id===U.page?'nav-item active':'nav-item')).join('')+'</div>').join('')+'</nav><div class="side-bottom">'+btn('save',icon('save',16)+T.save,'utility')+btn('download',icon('down',16)+T.download,'utility')+btn('reset',icon('reset',16)+T.reset,'utility')+'<div class="connection"><i></i>'+T.systemOnline+'</div></div></aside>'+(U.menu?btn('menu','','scrim','aria-label="'+T.close+'"'):'');
-}
-function header() {
-  const date=new Date(Date.parse(DB.calendar.epoch)+(S.day-1)*DB.calendar.dayMs).toISOString().slice(0,10).replaceAll('-','.');
-  return '<header class="topbar"><div class="top-place">'+ib('menu','menu',T.mobileMenu)+'<span class="port-icon">'+icon('anchor',18)+'</span><strong>'+DB.region+'</strong><span class="slash">/</span><span class="company-name" title="'+esc(S.setup.name)+'">'+esc(S.setup.name)+'</span></div><div class="time-controls"><span class="date">'+icon('calendar',15)+date+'</span><span class="day">'+T.dayTag+' '+String(S.day).padStart(3,'0')+'</span><div class="transport">'+ib('clock',timer?'pause':'play',timer?T.pause:T.play)+btn('speed',DB.calendar.speedLabels[U.speed],'speed','title="'+T.speed+'" aria-label="'+T.speed+'"')+ib('next','forward',T.next)+'</div></div></header>';
-}
-function stats() {
-  const benchmark=[...DB.raw,...DB.products];
-  const idx=DB.development.percent*sum(benchmark.map(k=>marketPrice(S,k)/DB.goods[k].base))/benchmark.length;
-  const tiles=[['cash',T.cashShort,won(S.player.cash),'gold'],['finance',T.income,won(S.player.profit),'mint'],['market',T.marketSummary,idx.toFixed(1),'blue'],['production',T.status,T[S.over?'insolvent':bottleneck(S)],'lavender']];
-  return '<div class="stats">'+tiles.map(([ic,name,val,col])=>'<div class="stat"><div class="stat-top"><span class="stat-icon '+col+'">'+icon(ic,16)+'</span><span>'+name+'</span></div><strong>'+val+'</strong></div>').join('')+'</div>';
-}
-function newsView(){
-  return panel(T.events,S.events.length?S.events.map(e=>row(e.name,(e.target?firmName(e.target)+' · ':'')+T.eventsUntil+' '+T.dayPrefix+e.end)).join(''):empty(T.normal))+ '<section class="panel feed">'+head(T.journal,T.feedTag)+feed(DB.finance.logLimit)+'</section>';
+function nav(id) {
+  if(id==='design') stopClock();
+  U.focusWindow=U.page!==id;
+  U.page=id;
 }
 function render() {
-  const focus=document.activeElement, prior=focus && root.contains(focus) ? {act:focus.dataset.act,id:focus.dataset.id,field:focus.dataset.field} : null;
-  Harbor.stop();
+  const focus=document.activeElement, prior=root.contains(focus)?focus.dataset:{};
   if(founding) {
     root.innerHTML=foundingScreen(draft,!!S);
     Harbor.mount(document.getElementById('found-canvas'),()=>({s:{player:{sites:[]}},id:'office'}),()=>{});
     return;
   }
-  const pages={overview,design:designView,development:projectView,map:()=>'<div class="dashboard map-view"><div class="main-col">'+mapPanel()+'</div><aside class="right-col">'+inspector()+'</aside></div>',market:marketView,production:productionView,logistics:logisticsView,finance:financeView,firms:firmsView,news:newsView};
-  root.innerHTML=sidebar()+'<div class="workarea">'+header()+'<main><div class="page-title"><div><div class="eyebrow title-eyebrow"><i></i>'+(U.page==='overview'?T.overviewEn:T.navEnglish[U.page])+'</div><h1>'+T[U.page]+'</h1></div><span class="phase"><i class="'+(timer?'running':'')+'"></i>'+(S.over?T.bankruptMsg:timer?T.live:T.pauseLabel)+'</span></div>'+(S.over?'<div class="failure">'+T.failedHelp+' '+btn('reset',T.reset,'subtle')+'</div>':'')+(U.page==='overview'?stats():'')+pages[U.page]()+'</main></div>';
-  if(prior?.field) root.querySelector('[data-field="'+prior.field+'"]')?.focus({preventScroll:true});
-  else if(prior?.act) root.querySelector('[data-act="'+prior.act+'"]'+(prior.id?'[data-id="'+prior.id+'"]':''))?.focus({preventScroll:true});
-  const map=document.getElementById('map-canvas');
-  if(map) {
-    Harbor.mount(map,()=>({s:S,id:U.site}),id=>{U.site=id;render();document.getElementById('map-canvas')?.focus({preventScroll:true});});
-    const a=site(U.site);
-    Harbor.preview(document.getElementById('preview'),S.player.built && a.id==='plot'?{...a,type:'factory'}:a);
-  }
+  const opening=U.focusWindow;
+  renderWorld();
+  if(opening) return;
+  const field=prior.field?'[data-field="'+prior.field+'"]':prior.tech?'[data-tech="'+prior.tech+'"]':null;
+  const action=prior.act?'[data-act="'+prior.act+'"]'+(prior.id?'[data-id="'+prior.id+'"]':''):null;
+  const selector=field||action;
+  if(selector) root.querySelector(selector)?.focus({preventScroll:true});
 }
-function doGoal(){
-  const i=S.player.milestones.findIndex(v=>!v);
-  if(i<0)return;
-  if(i===0||i===4){U.site=i===0?'office':'works';Harbor.focus(U.site);}
-  if(i===1||i===3)U.tab=i===1?'raw':'products';
-  nav(T.goalNav[i]);
+function closeWindow() {
+  const previous=U.page;
+  U.page=null;render();
+  const opener=root.querySelector('.world-dock [data-id="'+previous+'"]');
+  (opener||document.getElementById('map-canvas')).focus({preventScroll:true});
+}
+function updateGuide(step) {
+  S.guideStep=DB.tutorial[step]?step:null;
+  U.guideMoved=true;
+  save();
+}
+async function toggleFullscreen() {
+  try {
+    if(document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+    render();
+  }catch{notice(T.fullUnavailable);}
+}
+function doGoal() {
+  const index=S.player.milestones.findIndex(v=>!v);
+  if(index<0) return;
+  if(index===0||index===4||(index===2 && DB.sector.mode==='assembly' && !S.player.milestones[4])){
+    U.site=index===0?'office':'works';Harbor.focus(U.site);nav('site');return;
+  }
+  if(!S.player.catalog.length && (index===1||index===2)) {nav('design');return;}
+  if(index===1||index===3) U.tab=index===1?'raw':'products';
+  nav(T.goalNav[index]);
 }
 async function downloadGame(){
   try{
@@ -117,8 +121,8 @@ root.addEventListener('submit',e=>{
   if(S && !confirm(T.resetConfirm))return;
   const settings={...draft,name};
   S=newGame(Date.now()>>>0,settings);founding=false;stopClock();
-  Object.assign(U,{design:null,priceBasis:'targetMargin',batch:DB.operations.batch[0],exportQty:DB.trade.lots[0],qty:DB.trade.lots[0],resaleQty:DB.trade.lots[0],contractQty:DB.operations.batch[0],route:'road',raw:DB.raw[0],product:DB.products[0],sku:DB.products[0],material:DB.raw[0],site:'office',tab:'raw',speed:0});
-  Harbor.focus('office');nav('overview');save();render();
+  Object.assign(U,{design:null,priceBasis:'targetMargin',node:null,batch:DB.operations.batch[0],exportQty:DB.trade.lots[0],qty:DB.trade.lots[0],resaleQty:DB.trade.lots[0],contractQty:DB.operations.batch[0],route:'road',raw:DB.raw[0],product:null,sku:null,material:DB.raw[0],site:'office',tab:'raw',speed:0});
+  Harbor.focus('office');nav(null);save();render();
 });
 root.addEventListener('change',e=>{
   if(founding){
@@ -173,24 +177,32 @@ root.addEventListener('click',e=>{
   try{
     const commands={
       project:()=>startProject(S,id),acquire:()=>acquire(S,id),build:()=>improve(S,'build'),lines:()=>improve(S,'lines'),docks:()=>improve(S,'docks'),
-      contract:()=>contract(S,U.product,U.buyer,U.contractQty),resell:()=>resell(S,U.raw,U.resaleQty),order:()=>purchase(S,p,U.raw,U.route,U.qty),make:()=>enqueue(S,p,U.sku,U.batch),research:()=>research(S,p,U.sku),
+      contract:()=>contract(S,U.product,U.buyer,U.contractQty),resell:()=>resell(S,U.raw,U.resaleQty),order:()=>purchase(S,p,U.raw,U.route,U.qty),make:()=>enqueue(S,p,U.sku,U.batch),
       export:()=>shipExport(S,p,U.product,U.exportQty),borrow:()=>bank(S,true),repay:()=>bank(S,false)
     };
     if(commands[action]){
       if(S.over)fail('insolvent');commands[action]();save();
-      const msg={project:'researchStarted',contract:'contractBtn',resell:'buyback',order:'purchased',make:'queue',research:'ready',export:'exportBtn',borrow:'borrow',repay:'repay',acquire:id==='office'?'leased':'acquired',build:'builtNews',lines:'upgrade',docks:'upgrade'};
+      const msg={project:'researchStarted',contract:'contractBtn',resell:'buyback',order:'purchased',make:'queue',export:'exportBtn',borrow:'borrow',repay:'repay',acquire:id==='office'?'leased':'acquired',build:'builtNews',lines:'upgrade',docks:'upgrade'};
       notice(T[msg[action]]);
     } else switch(action){
-      case 'nav':nav(id);break;
-      case 'menu':U.menu=!U.menu;break;
+      case 'nav':if(U.page===id){closeWindow();return;}nav(id);break;
+      case 'closeWindow':closeWindow();return;
+      case 'treeNode':U.node=id;break;
+      case 'guideStart':if(currentGuide()) updateGuide(null);else updateGuide(0);break;
+      case 'guideSkip':updateGuide(null);break;
+      case 'guideBack':updateGuide(S.guideStep-1);break;
+      case 'guideNext':updateGuide(S.guideStep+1);break;
+      case 'guideOpen':openGuideTarget();break;
+      case 'fullscreen':void toggleFullscreen();return;
+      case 'siteList':nav('site');break;
       case 'clock':if(timer)stopClock();else runClock();break;
       case 'speed':U.speed=(U.speed+1)%DB.calendar.speeds.length;if(timer){stopClock();runClock();}break;
       case 'next':tick();return;
       case 'save':save(true);return;
       case 'download':void downloadGame();return;
-      case 'reset':stopClock();draft=foundingDefaults();founding=true;U.menu=false;Harbor.focus('office');break;
+      case 'reset':stopClock();draft=foundingDefaults();founding=true;Harbor.focus('office');break;
       case 'cancelSetup':founding=false;break;
-      case 'focus':U.site='office';Harbor.focus('office');break;
+      case 'focus':U.site='office';Harbor.focus('office');nav('site');break;
       case 'zoomIn':Harbor.zoom(1);return;
       case 'zoomOut':Harbor.zoom(-1);return;
       case 'good':U.tab=DB.raw.includes(id)?'raw':'products';U[U.tab==='raw'?'raw':'product']=id;nav('market');break;
@@ -198,11 +210,15 @@ root.addEventListener('click',e=>{
       case 'designedSku':U.sku=id;nav('production');break;
       case 'sku':U.sku=id;break;
       case 'firm':U.firm=id;nav('firms');break;
-      case 'firmMap':U.site=DB.sites.find(a=>a.firm===U.firm).id;Harbor.focus(U.site);nav('map');break;
+      case 'firmMap':U.site=DB.sites.find(a=>a.firm===U.firm).id;Harbor.focus(U.site);nav('site');break;
       case 'goal':doGoal();break;
     }
     render();
   }catch(err){notice(err.message);}
 });
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && !founding && U.page){e.preventDefault();closeWindow();}
+});
+document.addEventListener('fullscreenchange',()=>{if(!founding) render();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden && timer){stopClock();save();render();}});
 render();

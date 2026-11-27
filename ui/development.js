@@ -35,16 +35,43 @@ function designView() {
   const list=entries(S.designs||{}).map(([id,d])=>btn('designedSku',itemLogo(id)+'<span>'+esc(d.name)+'</span>'+tag(variants(d.family)[d.subtype]),'good','data-id="'+id+'"')).join('');
   return '<div class="two-col">'+panel(T.design,'<p>'+T.designHelp+'</p>'+fields)+panel(T.designPrice,'<div id="design-numbers">'+designNumbers(d)+'</div>')+'</div>'+panel(T.designReady,list?'<div class="goods-list">'+list+'</div>':empty(T.emptyDesign));
 }
+function treeStatus(id,node,p) {
+  if(p.completed?.includes(id)) return ['done',T.doneProject];
+  if(p.project?.id===id) return ['active',T.underway];
+  return node.needs.every(k=>p.completed?.includes(k)) ? ['ready',T.treeReady] : ['locked',T.treeLocked];
+}
+function technologyTree(title,ids,p) {
+  const nodes=DB.development.nodes, positions=new Map();
+  const depth=id=>Math.max(0,...nodes[id].needs.map(parent=>1+depth(parent)));
+  const columns=Math.max(...ids.map(depth))+1;
+  const lanes=Array.from({length:columns},()=>[]);
+  for(const id of ids) lanes[depth(id)].push(id);
+  const rows=Math.max(...lanes.map(lane=>lane.length));
+  lanes.forEach((lane,col)=>lane.forEach((id,row)=>positions.set(id,{
+    x:(col+.5)*100/columns, y:(row+(rows-lane.length+1)/2)*100/rows
+  })));
+  const edges=ids.flatMap(id=>nodes[id].needs.map(parent=>{
+    const from=positions.get(parent),to=positions.get(id),mid=(from.x+to.x)/2;
+    const complete=p.completed?.includes(parent);
+    return '<path class="'+(complete?'lit':'')+'" d="M'+from.x+' '+from.y+' H'+mid+' V'+to.y+' H'+to.x+'"/>';
+  })).join('');
+  const controls=ids.map(id=>{
+    const node=nodes[id], [state,label]=treeStatus(id,node,p), {x,y}=positions.get(id);
+    const tip='<span class="node-tip" id="tip-'+id+'" role="tooltip"><strong>'+nodeName(node)+'</strong><span>'+node.desc+'</span><em>'+label+'</em></span>';
+    return '<div class="tree-point" style="--x:'+x+'%;--y:'+y+'%">'+btn('treeNode',icon(node.icon,26),'tree-icon '+state,'data-id="'+id+'" aria-label="'+nodeName(node)+'" aria-describedby="tip-'+id+'" aria-pressed="'+(U.node===id)+'"')+
+      '<span class="node-label">'+nodeName(node)+'</span>'+tip+'</div>';
+  }).join('');
+  return '<section class="tree-branch"><h3>'+title+'</h3><div class="tree-scroll"><div class="tree-grid" style="--cols:'+columns+';--rows:'+rows+'"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+edges+'</svg>'+controls+'</div></div></section>';
+}
 function projectView() {
-  const p=S.player,nodes=DB.development.nodes;
-  function branch(technical) {
-    return entries(nodes).filter(([,n])=>Boolean(n.tech||n.department)===technical).map(([id,n])=>{
-      const complete=p.completed?.includes(id), active=p.project?.id===id, ready=n.needs.every(k=>p.completed?.includes(k));
-      return '<article class="project-card"><div><h3>'+nodeName(n)+'</h3>'+ (complete?tag(T.doneProject,'green'):active?tag(T.underway,'amber'):'')+'</div><p>'+n.desc+'</p>'+
-        row(T.prerequisites,n.needs.length?n.needs.map(k=>nodeName(nodes[k])).join(' + '):T.noRequirements)+
-        row(T.projectPrice,won(developmentCost(n.cost)))+row(active?T.daysLeft:T.daysRequired,(active?p.project.due-S.day:n.days)+' '+T.dayUnit)+
-        (complete||active?'':btn('project',T.startProject,'subtle wide','data-id="'+id+'" '+(!ready||p.project?'disabled':'')))+'</article>';
-    }).join('');
-  }
-  return '<div class="two-col">'+panel(T.researchTree,branch(true))+panel(T.companyTree,branch(false))+'</div>';
+  const p=S.player,nodes=DB.development.nodes,ids=Object.keys(nodes);
+  const researchIds=ids.filter(id=>nodes[id].tech||nodes[id].department);
+  const companyIds=ids.filter(id=>!researchIds.includes(id));
+  const id=U.node||p.project?.id||ids[0], node=nodes[id], [state,label]=treeStatus(id,node,p);
+  const launch=state==='ready'&&!p.project;
+  const detail='<div class="tree-detail"><div>'+tag(label,state==='done'?'green':'amber')+'<h3>'+nodeName(node)+'</h3><p>'+node.desc+'</p></div>'+
+    '<div class="tree-cost">'+row(T.prerequisites,node.needs.length?node.needs.map(k=>nodeName(nodes[k])).join(' + '):T.noRequirements)+
+    row(T.projectPrice,won(developmentCost(node.cost)))+row(state==='active'?T.daysLeft:T.daysRequired,(state==='active'?p.project.due-S.day:node.days)+' '+T.dayUnit)+
+    (launch?btn('project',T.startProject,'primary','data-id="'+id+'"'):'')+'</div></div>';
+  return technologyTree(T.researchTree,researchIds,p)+technologyTree(T.companyTree,companyIds,p)+detail;
 }

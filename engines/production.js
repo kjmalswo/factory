@@ -4,7 +4,7 @@ const unitRecipe = (s,k) => recipeCost(s,k)/(DB.sector.licenseRun||1);
 const possible = (f,k) => Math.min(...entries(DB.goods[k].bom).map(([i,n])=>Math.floor(f.stock[i]/n)));
 const workLeft = f => sum(f.jobs.map(j=>j.qty*DB.goods[j.k].work-j.progress));
 function research(s,f,k) {
-  if(f.id==='player') requireOffice(s);
+  if(f.id==='player') fail('locked');
   if(!DB.products.includes(k)) fail('invalid');
   if(f.unlocked.includes(k)) fail('duplicate');
   const cost=DB.goods[k].research || DB.ai.launchCost;
